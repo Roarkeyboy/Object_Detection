@@ -182,7 +182,7 @@ imshow(image_pgm)
 hold on;
 plot(boundary(:,2),boundary(:,1),'g','LineWidth',3); % Change colour each time it iterates
 
-%% DRAW OUTLINES OVER ALL OBJECTS (DRAW OUTLINES BUTTON)
+%% DRAW OUTLINES OVER ALL OBJECTS (
 % --- Executes on button press in pushbutton5.
 function pushbutton5_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton5 (see GCBO)
@@ -222,7 +222,7 @@ for ii = 1:20 % make total
     plot(boundary(:,2),boundary(:,1),'g','LineWidth',1); % Change colour each time it iterates
 end
 
-%% SIFT MATCH OF SINGLE OBJECT WITH SCENE (SIFT MATCH BUTTON)
+%% SIFT MATCH OF SINGLE OBJECT WITH SCENE
 % --- Executes on button press in pushbutton6.
 function pushbutton6_Callback(hObject, eventdata, handles)
 global current_sceneglobal current_scene
@@ -230,7 +230,7 @@ scene_pgm = strcat('found_objects/',current_scene,'/scene_1.pgm');
 image_pgm = strcat('found_objects/',current_scene,'/image_1.pgm');
 match(scene_pgm, image_pgm);
 
-%% SIFT MATCH OF ALL OBJECTS IN SCENE (SIFT MATCHES BUTTON)
+%% SIFT MATCH OF ALL OBJECTS IN SCENE
 % --- Executes on button press in pushbutton7.
 function pushbutton7_Callback(hObject, eventdata, handles)
 global current_scene
@@ -240,7 +240,7 @@ for ii=1:20
     match(scene_pgm, image_pgm);
 end
 
-%% SAVE DESCRIPTORS AS MATLAB DATA (SAVE SIFT BUTTON)
+%% SAVE DESCRIPTORS AS MATLAB DATA
 % --- Executes on button press in pushbutton8.
 function pushbutton8_Callback(hObject, eventdata, handles)
 global current_scene
@@ -248,7 +248,9 @@ image_1_pgm = strcat('found_objects/',current_scene,'/image_1.pgm');
 [~, des, ~] = sift(image_1_pgm); % MIGHT NEED LOCAL, NOT SURE!
 save(strcat('found_objects/',current_scene,'/image_1.mat', 'des'));
 
-%% ATTEMPTING TO ADD EACH DETECTED OBJECT BESIDE MAIN IMAGE (MATCH DISPLAY BUTTON)
+%%
+
+
 % --- Executes on button press in pushbutton10.
 function pushbutton10_Callback(hObject, eventdata, handles)
 scene1 = imread('found_objects/scene_1/scene_1.pgm');
