@@ -22,7 +22,7 @@ function varargout = project(varargin)
 
 % Edit the above text to modify the response to help project
 
-% Last Modified by GUIDE v2.5 12-Apr-2020 13:01:06
+% Last Modified by GUIDE v2.5 03-May-2020 20:09:11
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -114,6 +114,7 @@ full_name = [file_path file_name];
 global current_scene
 current_scene = file_name(1:strfind(file_name,'.')-1);
 image_file = imread(full_name); % Read in image at given path
+image_file = imresize(image_file,0.25);
 %image_file_rgb = image_file; % Save a copy of image before conversion
 imagesc(image_file); axis(handles.axes1, 'equal','tight','off')% Using axes1 % Display the image onto the axes
 if (size(image_file,3) == 3) % If image is RGB, convert to gray
@@ -225,9 +226,9 @@ end
 %% SIFT MATCH OF SINGLE OBJECT WITH SCENE (SIFT MATCH BUTTON)
 % --- Executes on button press in pushbutton6.
 function pushbutton6_Callback(hObject, eventdata, handles)
-global current_sceneglobal current_scene
+global current_scene
 scene_pgm = strcat('found_objects/',current_scene,'/scene_1.pgm');
-image_pgm = strcat('found_objects/',current_scene,'/image_1.pgm');
+image_pgm = strcat('found_objects/',current_scene,'/image_2.pgm');
 match(scene_pgm, image_pgm);
 
 %% SIFT MATCH OF ALL OBJECTS IN SCENE (SIFT MATCHES BUTTON)
@@ -262,3 +263,54 @@ app = appendimages2(image1,image2,size(scene1,2));
 imagesc(app); axis(handles.axes1, 'equal','tight','off')
 %imagesc(app2); axis(handles.axes1, 'equal','tight','off')
 colormap(gray)
+
+
+% --- Executes on button press in pushbutton11.
+function pushbutton11_Callback(hObject, eventdata, handles)
+%[file_name,file_path]= uigetfile('*'); % Get the jpg data from the users selection
+%full_name = [file_path file_name]; 
+%image_file = imread(full_name); % Read in image at given path
+%if (size(image_file,3) == 3) % If image is RGB, convert to gray
+%    image_file = rgb2gray(image_file);
+%end
+%imwrite(image_file,strcat('found_objects/',current_scene,'/scene_1.pgm'),'pgm');
+%files = dir('input_images/objects/canned_beans');
+d = 'input_images/objects/canned_beans';
+files = dir(fullfile(d,'*.jpg'));
+figure()
+for kk = 1:numel(files)
+    file_name = fullfile(d,files(kk).name);
+    image = imread(file_name);
+    image = imresize(image,0.25);
+    if (size(image,3) == 3) % If image is RGB, convert to gray
+        image = rgb2gray(image);
+    end
+    bw_image = imbinarize(image,0.55);
+    se = strel('disk',4);
+    after_erosion = imerode(~bw_image,se);
+    se = strel('disk',4);
+    after_dilate = imdilate(after_erosion,se);
+    [label,total] = bwlabel(after_dilate,8);
+    bounding_boxes = regionprops(label,'BoundingBox');
+    temp = 0;
+    max = 0;
+    for ii = 1:total
+        coord = bounding_boxes(ii).BoundingBox;
+        cropped_image = imcrop(image, [coord(1), coord(2), coord(3), coord(4)]);
+        temp = cropped_image;
+        if (size(temp) > size(max))
+            max = temp;
+        end
+    end
+    subplot(2,3,kk);
+    imshow(max);
+    imwrite(image,strcat('input_images/objects/canned_beans/image_',num2str(kk),'.pgm'),'pgm');
+end
+
+
+% --- Executes on button press in pushbutton12.
+function pushbutton12_Callback(hObject, eventdata, handles)
+global current_scene
+image_pgm = strcat('input_images/objects/canned_beans/image_2.pgm');
+scene_pgm = strcat('found_objects/',current_scene,'/scene_1.pgm');
+match(scene_pgm, image_pgm);
