@@ -122,7 +122,7 @@ if (size(image_file,3) == 3) % If image is RGB, convert to gray
     image_file = rgb2gray(image_file);
 end
 colormap(gray) % display grayscale
-imwrite(image_file,strcat('found_objects/',current_scene,'/scene_1.pgm'),'pgm');
+imwrite(image_file,strcat('found_objects/',current_scene,'/',current_scene,'.pgm'),'pgm');
 handles.image_file = image_file;
 guidata(hObject,handles);
 
