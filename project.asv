@@ -22,7 +22,7 @@ function varargout = project(varargin)
 
 % Edit the above text to modify the response to help project
 
-% Last Modified by GUIDE v2.5 03-May-2020 16:58:44
+% Last Modified by GUIDE v2.5 03-May-2020 20:09:11
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -54,7 +54,8 @@ function project_OpeningFcn(hObject, eventdata, handles, varargin)
 
 % Choose default command line output for project
 handles.output = hObject;
-
+object_list = {'battery','calculator','canned_beans','cologne','deodorant','drink_holder','eraser','highlighter','lip_balm','minion','pallet','phone','sauce_jar','shoe','snack_bar','sunglasses','ue_boom','vitamins','wallet_1','wallet_2'};
+handles.object_list = object_list;
 % Update handles structure
 guidata(hObject, handles);
 
@@ -114,6 +115,7 @@ full_name = [file_path file_name];
 global current_scene
 current_scene = file_name(1:strfind(file_name,'.')-1);
 image_file = imread(full_name); % Read in image at given path
+image_file = imresize(image_file,0.25);
 %image_file_rgb = image_file; % Save a copy of image before conversion
 imagesc(image_file); axis(handles.axes1, 'equal','tight','off')% Using axes1 % Display the image onto the axes
 if (size(image_file,3) == 3) % If image is RGB, convert to gray
@@ -225,7 +227,7 @@ end
 %% SIFT MATCH OF SINGLE OBJECT WITH SCENE (SIFT MATCH BUTTON)
 % --- Executes on button press in pushbutton6.
 function pushbutton6_Callback(hObject, eventdata, handles)
-global current_sceneglobal current_scene
+global current_scene
 scene_pgm = strcat('found_objects/',current_scene,'/scene_1.pgm');
 image_pgm = strcat('found_objects/',current_scene,'/image_2.pgm');
 match(scene_pgm, image_pgm);
@@ -264,71 +266,52 @@ imagesc(app); axis(handles.axes1, 'equal','tight','off')
 colormap(gray)
 
 
+%
 % --- Executes on button press in pushbutton11.
 function pushbutton11_Callback(hObject, eventdata, handles)
-%[file_name,file_path]= uigetfile('*'); % Get the jpg data from the users selection
-%full_name = [file_path file_name]; 
-%image_file = imread(full_name); % Read in image at given path
-%if (size(image_file,3) == 3) % If image is RGB, convert to gray
-%    image_file = rgb2gray(image_file);
-%end
-%imwrite(image_file,strcat('found_objects/',current_scene,'/scene_1.pgm'),'pgm');
-%files = dir('input_images/objects/canned_beans');
-d = 'input_images/objects/canned_beans';
+type = 'wallet_2';
+d = strcat('input_images/objects/',type);
 files = dir(fullfile(d,'*.jpg'));
-%figure()
+figure()
 for kk = 1:numel(files)
     file_name = fullfile(d,files(kk).name);
     image = imread(file_name);
-    %subplot(4,5,kk);
-    %imshow(image);
+    image = imresize(image,0.25);
     if (size(image,3) == 3) % If image is RGB, convert to gray
         image = rgb2gray(image);
     end
-    
+    bw_image = imbinarize(image,0.55);
+    se = strel('disk',4);
+    after_erosion = imerode(~bw_image,se);
+    se = strel('disk',4);
+    after_dilate = imdilate(after_erosion,se);
+    [label,total] = bwlabel(after_dilate,8);
+    bounding_boxes = regionprops(label,'BoundingBox');
+    temp = 0;
+    max = 0;
+    for ii = 1:total
+        coord = bounding_boxes(ii).BoundingBox;
+        cropped_image = imcrop(image, [coord(1), coord(2), coord(3), coord(4)]);
+        temp = cropped_image;
+        if (size(temp) > size(max))
+            max = temp;
+        end
+    end
+    subplot(2,3,kk);
+    imshow(max);
+    imwrite(image,strcat('input_images/objects/',type,'/image_',num2str(kk),'.pgm'),'pgm');
 end
 
-bw_image = imbinarize(image,0.55);
-se = strel('disk',4);
-after_erosion = imerode(~bw_image,se);
-se = strel('disk',4);
-after_dilate = imdilate(after_erosion,se);
-[label,total] = bwlabel(after_dilate,8);
-bounding_boxes = regionprops(label,'BoundingBox');
-figure();
-temp = 0;
-max = 0;
-%disp(strcat('Found :',num2str(total),' objects'));
-for ii = 1:total
-    coord = bounding_boxes(ii).BoundingBox;
-    cropped_image = imcrop(image, [coord(1), coord(2), coord(3), coord(4)]);
-    temp = cropped_image;
-    if (temp > max)
-        max = temp;
-    %subplot(4,5,ii);
-    %imshow(cropped_image);
-    imshow(
+
+% --- Executes on button press in pushbutton12.
+function pushbutton12_Callback(hObject, eventdata, handles)
+global current_scene
+
+scene_pgm = strcat('found_objects/',current_scene,'/',current_scene,'.pgm');
+for jj = 1:3
+    type = char(handles.object_list(jj));
+    for ii = 1:1
+        image_pgm = strcat('input_images/objects/',type,'/image_',num2str(ii),'.pgm');
+        match(scene_pgm, image_pgm);
+    end
 end
-%imwrite(Files(kk),strcat('input_images/objects/canned_beans/image_',num2str(kk),'.pgm'),'pgm');
-
-% for kk=1:length(files)
-%     file_name = files(kk).name;
-%     file_read = imread(file_name);
-%     bw_image = imbinarize(file_read,0.55);
-%     se = strel('disk',2);
-%     after_erosion = imerode(~bw_image,se);
-%     se = strel('disk',6);
-%     after_dilate = imdilate(after_erosion,se);
-%     [label,total] = bwlabel(after_dilate,8);
-%     bounding_boxes = regionprops(label,'BoundingBox');
-%     figure();
-%     disp(strcat('Found :',num2str(total),' objects'));
-%     for ii = 1:total
-%         coord = bounding_boxes(ii).BoundingBox;
-%         cropped_image = imcrop(file_read, [coord(1), coord(2), coord(3), coord(4)]);
-%         subplot(4,5,ii);
-%         imshow(cropped_image);
-%     end
-%    %imwrite(Files(kk),strcat('input_images/objects/canned_beans/image_',num2str(kk),'.pgm'),'pgm');
-% end
-

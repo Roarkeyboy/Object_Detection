@@ -54,7 +54,8 @@ function project_OpeningFcn(hObject, eventdata, handles, varargin)
 
 % Choose default command line output for project
 handles.output = hObject;
-
+object_list = {'battery','calculator','canned_beans','cologne','deodorant','drink_holder','eraser','highlighter','lip_balm','minion','pallet','phone','sauce_jar','shoe','snack_bar','sunglasses','ue_boom','vitamins','wallet_1','wallet_2'};
+handles.object_list = object_list;
 % Update handles structure
 guidata(hObject, handles);
 
@@ -265,17 +266,12 @@ imagesc(app); axis(handles.axes1, 'equal','tight','off')
 colormap(gray)
 
 
+% Used this to add folders one at a time and convert to pgm (can easily do
+% all at once)
 % --- Executes on button press in pushbutton11.
 function pushbutton11_Callback(hObject, eventdata, handles)
-%[file_name,file_path]= uigetfile('*'); % Get the jpg data from the users selection
-%full_name = [file_path file_name]; 
-%image_file = imread(full_name); % Read in image at given path
-%if (size(image_file,3) == 3) % If image is RGB, convert to gray
-%    image_file = rgb2gray(image_file);
-%end
-%imwrite(image_file,strcat('found_objects/',current_scene,'/scene_1.pgm'),'pgm');
-%files = dir('input_images/objects/canned_beans');
-d = 'input_images/objects/canned_beans';
+type = 'wallet_2';
+d = strcat('input_images/objects/',type);
 files = dir(fullfile(d,'*.jpg'));
 figure()
 for kk = 1:numel(files)
@@ -304,13 +300,19 @@ for kk = 1:numel(files)
     end
     subplot(2,3,kk);
     imshow(max);
-    imwrite(image,strcat('input_images/objects/canned_beans/image_',num2str(kk),'.pgm'),'pgm');
+    imwrite(image,strcat('input_images/objects/',type,'/image_',num2str(kk),'.pgm'),'pgm');
 end
 
 
 % --- Executes on button press in pushbutton12.
 function pushbutton12_Callback(hObject, eventdata, handles)
 global current_scene
-image_pgm = strcat('input_images/objects/canned_beans/image_2.pgm');
-scene_pgm = strcat('found_objects/',current_scene,'/scene_1.pgm');
-match(scene_pgm, image_pgm);
+
+scene_pgm = strcat('found_objects/',current_scene,'/',current_scene,'.pgm');
+for jj = 1:3
+    type = char(handles.object_list(jj));
+    for ii = 1:1
+        image_pgm = strcat('input_images/objects/',type,'/image_',num2str(ii),'.pgm');
+        match(scene_pgm, image_pgm);
+    end
+end
