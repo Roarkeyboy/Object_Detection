@@ -266,41 +266,43 @@ imagesc(app); axis(handles.axes1, 'equal','tight','off')
 colormap(gray)
 
 
-% Used this to add folders one at a time and convert to pgm (can easily do
-% all at once)
+% Used this to add folders one and convert to pgm 
 % --- Executes on button press in pushbutton11.
 function pushbutton11_Callback(hObject, eventdata, handles)
-type = 'wallet_2';
-d = strcat('input_images/objects/',type);
-files = dir(fullfile(d,'*.jpg'));
-figure()
-for kk = 1:numel(files)
-    file_name = fullfile(d,files(kk).name);
-    image = imread(file_name);
-    image = imresize(image,0.25);
-    if (size(image,3) == 3) % If image is RGB, convert to gray
-        image = rgb2gray(image);
-    end
-    bw_image = imbinarize(image,0.55);
-    se = strel('disk',4);
-    after_erosion = imerode(~bw_image,se);
-    se = strel('disk',4);
-    after_dilate = imdilate(after_erosion,se);
-    [label,total] = bwlabel(after_dilate,8);
-    bounding_boxes = regionprops(label,'BoundingBox');
-    temp = 0;
-    max = 0;
-    for ii = 1:total
-        coord = bounding_boxes(ii).BoundingBox;
-        cropped_image = imcrop(image, [coord(1), coord(2), coord(3), coord(4)]);
-        temp = cropped_image;
-        if (size(temp) > size(max))
-            max = temp;
+%type = 'wallet_2';
+for jj = 1:20 % Object list index
+    type = char(handles.object_list(jj));
+    d = strcat('input_images/objects/',type);
+    files = dir(fullfile(d,'*.jpg'));
+    figure()
+    for kk = 1:numel(files)
+        file_name = fullfile(d,files(kk).name);
+        image = imread(file_name);
+        image = imresize(image,0.25);
+        if (size(image,3) == 3) % If image is RGB, convert to gray
+            image = rgb2gray(image);
         end
+        bw_image = imbinarize(image,0.55);
+        se = strel('disk',4);
+        after_erosion = imerode(~bw_image,se);
+        se = strel('disk',4);
+        after_dilate = imdilate(after_erosion,se);
+        [label,total] = bwlabel(after_dilate,8);
+        bounding_boxes = regionprops(label,'BoundingBox');
+        temp = 0;
+        max = 0;
+        for ii = 1:total
+            coord = bounding_boxes(ii).BoundingBox;
+            cropped_image = imcrop(image, [coord(1), coord(2), coord(3), coord(4)]);
+            temp = cropped_image;
+            if (size(temp) > size(max))
+                max = temp;
+            end
+        end
+        subplot(2,3,kk);
+        imshow(max);
+        imwrite(max,strcat('input_images/objects/',type,'/image_',num2str(kk),'.pgm'),'pgm');
     end
-    subplot(2,3,kk);
-    imshow(max);
-    imwrite(image,strcat('input_images/objects/',type,'/image_',num2str(kk),'.pgm'),'pgm');
 end
 
 
@@ -309,9 +311,9 @@ function pushbutton12_Callback(hObject, eventdata, handles)
 global current_scene
 
 scene_pgm = strcat('found_objects/',current_scene,'/',current_scene,'.pgm');
-for jj = 1:3
+for jj = 2:2 % Object list index
     type = char(handles.object_list(jj));
-    for ii = 1:1
+    for ii = 1:6 % Orienation index
         image_pgm = strcat('input_images/objects/',type,'/image_',num2str(ii),'.pgm');
         match(scene_pgm, image_pgm);
     end
