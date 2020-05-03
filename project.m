@@ -22,7 +22,7 @@ function varargout = project(varargin)
 
 % Edit the above text to modify the response to help project
 
-% Last Modified by GUIDE v2.5 03-May-2020 20:09:11
+% Last Modified by GUIDE v2.5 03-May-2020 21:41:52
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -116,7 +116,7 @@ global current_scene
 current_scene = file_name(1:strfind(file_name,'.')-1);
 image_file = imread(full_name); % Read in image at given path
 image_file = imresize(image_file,0.25);
-%image_file_rgb = image_file; % Save a copy of image before conversion
+image_file_rgb = image_file; % Save a copy of image before conversion
 imagesc(image_file); axis(handles.axes1, 'equal','tight','off')% Using axes1 % Display the image onto the axes
 if (size(image_file,3) == 3) % If image is RGB, convert to gray
     image_file = rgb2gray(image_file);
@@ -124,6 +124,7 @@ end
 colormap(gray) % display grayscale
 imwrite(image_file,strcat('found_objects/',current_scene,'/',current_scene,'.pgm'),'pgm');
 handles.image_file = image_file;
+handles.image_file_rgb = image_file_rgb;
 guidata(hObject,handles);
 
 %% REWRITE OBJECTS AS PGM (RENAME BUTTON)
@@ -318,3 +319,30 @@ for jj = 2:2 % Object list index
         match(scene_pgm, image_pgm);
     end
 end
+
+
+% --- Executes on button press in pushbutton13.
+function pushbutton13_Callback(hObject, eventdata, handles)
+image = handles.image_file;
+rgb_image = handles.image_file_rgb;
+bw_image = imbinarize(image,0.45);
+canny_image = edge(bw_image,'canny');
+after_dilate = imdilate(canny_image,strel('disk',4));
+figure()
+subplot(2,2,1);
+imshow(canny_image);
+subplot(2,2,2);
+imshow(after_dilate);
+[height, width] = size(after_dilate);
+RGB = rgb_image;
+for column = 1 : width
+    for row = 1 : height
+        if (after_dilate(row, column) == 1)
+            RGB(row, column,1) = 0;
+            RGB(row, column,2) = 200;
+            RGB(row, column,3) = 0;
+        end
+    end
+end
+subplot(2,2,3);
+imshow(RGB);
