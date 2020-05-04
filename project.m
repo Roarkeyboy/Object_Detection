@@ -250,10 +250,14 @@ end
 % --- Executes on button press in pushbutton8.
 function pushbutton8_Callback(hObject, eventdata, handles)
 global current_scene
-image_1_pgm = strcat('found_objects/',current_scene,'/image_1.pgm');
-[~, des, ~] = sift(image_1_pgm); % MIGHT NEED LOCAL, NOT SURE!
-save(strcat('found_objects/',current_scene,'/image_1.mat', 'des'));
-
+%image_1_pgm = strcat('found_objects/',current_scene,'/image_1.pgm');
+%[~, des, ~] = sift(image_1_pgm); % MIGHT NEED LOCAL, NOT SURE!
+%save(strcat('found_objects/',current_scene,'/image_1.mat', 'des'));
+for ii = 1:6
+    image_pgm = strcat('input_images/objects/calculator/image_',num2str(ii),'.pgm');
+    [~, des, locs] = sift(image_pgm);
+    save(strcat('input_images/objects/calculator/image_',num2str(ii),'.mat'), 'des','locs');
+end
 %% ADD EACH DETECTED OBJECT BESIDE MAIN IMAGE (MATCH DISPLAY BUTTON)
 % --- Executes on button press in pushbutton10.
 function pushbutton10_Callback(hObject, eventdata, handles)
