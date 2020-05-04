@@ -151,7 +151,7 @@ function pushbutton4_Callback(hObject, eventdata, handles)
 global current_scene
 figure();
 subplot(2,2,1);
-image_pgm = imread(strcat('found_objects/',current_scene,'/image_10.pgm'));
+image_pgm = imread(strcat('found_objects/',current_scene,'/image_2.pgm'));
 imshow(image_pgm);
 %canny_image = edge(image_pgm,'canny',0.3);
 %CH_objects = bwconvhull(canny_image,'Objects');
@@ -169,7 +169,7 @@ stat=regionprops(label,'Centroid','Area','PixelIdxList');
 [row col] = size(stat);
 for i=1:row
     if (i~=index)
-       bw_image(stat(i).PixelIdxList)=0; % Remove all small regions except large area index
+       bw_image(stat(i).PixelIdxList) = 0; % Remove all small regions except large area index
     end
 end
 subplot(2,2,3);
@@ -193,7 +193,9 @@ function pushbutton5_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 global current_scene
 figure();
-for ii = 1:20 % make total
+d = strcat('found_objects/',current_scene,'/');
+files = dir(fullfile(d,'*.pgm'));
+for ii = 1:numel(files)-1
     image_pgm = imread(strcat('found_objects/',current_scene,'/image_',num2str(ii),'.pgm'));
     %canny_image = edge(image_pgm,'canny',0.33); % CHANGE THIS BACK TO 0.5
     %CH_objects = bwconvhull(canny_image,'Objects');
@@ -215,7 +217,6 @@ for ii = 1:20 % make total
     %[rows cols] = size(CH_objects)
     dim = size(bw_image);
     cols = round(dim(2)/2);
-    % USE A TRY CATCH and make rows = 1 if rows empty
     rows = min(find(bw_image(:,cols)));
     boundary = bwtraceboundary(bw_image,[rows, cols],'N');
 
@@ -237,8 +238,10 @@ match(scene_pgm, image_pgm);
 % --- Executes on button press in pushbutton7.
 function pushbutton7_Callback(hObject, eventdata, handles)
 global current_scene
-scene_pgm = strcat('found_objects/',current_scene,'/scene_1.pgm');
-for ii=1:20
+scene_pgm = strcat('found_objects/',current_scene,'/',current_scene,'.pgm');
+d = strcat('found_objects/',current_scene,'/');
+files = dir(fullfile(d,'*.pgm'));
+for ii = 1:numel(files)-1
     image_pgm = strcat('found_objects/',current_scene,'/image_',num2str(ii),'.pgm');
     match(scene_pgm, image_pgm);
 end
@@ -251,21 +254,28 @@ image_1_pgm = strcat('found_objects/',current_scene,'/image_1.pgm');
 [~, des, ~] = sift(image_1_pgm); % MIGHT NEED LOCAL, NOT SURE!
 save(strcat('found_objects/',current_scene,'/image_1.mat', 'des'));
 
-%% ATTEMPTING TO ADD EACH DETECTED OBJECT BESIDE MAIN IMAGE (MATCH DISPLAY BUTTON)
+%% ADD EACH DETECTED OBJECT BESIDE MAIN IMAGE (MATCH DISPLAY BUTTON)
 % --- Executes on button press in pushbutton10.
 function pushbutton10_Callback(hObject, eventdata, handles)
+global current_scene;
 scene1 = imread('found_objects/scene_1/scene_1.pgm');
 image1 = imread('found_objects/scene_1/image_1.pgm');
 image2 = imread('found_objects/scene_1/image_2.pgm');
+image3 = imread('found_objects/scene_1/image_3.pgm');
+image4 = imread('found_objects/scene_1/image_4.pgm');
 %app = appendimages(scene1,image1);
-app = appendimages2(image1,image2,size(scene1,2));
-%app2 = appendimages(scene1,app);
+%app2 = appendimages2(image1,image2,scene1,1);
+%app = appendimages(scene1,app2);
+app = appendimages(scene1,image1);
+app2 = image1;
+for ii = 2:5
+    im = imread(strcat('found_objects/scene_1/image_',num2str(ii),'.pgm')); 
+    app2 = appendimages2(app2,im,scene1,ii);
+    app = appendimages(scene1,app2);
+    imagesc(app); axis(handles.axes1, 'equal','tight','off')
+end
 
-%figure('Position', [100 100 size(app,2) size(app,1)]);
-imagesc(app); axis(handles.axes1, 'equal','tight','off')
-%imagesc(app2); axis(handles.axes1, 'equal','tight','off')
 colormap(gray)
-
 
 % Used this to add folders one and convert to pgm 
 % --- Executes on button press in pushbutton11.
@@ -306,28 +316,48 @@ for jj = 1:20 % Object list index
     end
 end
 
-
+% this compares the found object with the actual object and its
+% orientations
 % --- Executes on button press in pushbutton12.
 function pushbutton12_Callback(hObject, eventdata, handles)
 global current_scene
 
 scene_pgm = strcat('found_objects/',current_scene,'/',current_scene,'.pgm');
-for jj = 2:2 % Object list index
+for jj = 2:2 % Object list index - 2 is Calculator
     type = char(handles.object_list(jj));
     for ii = 1:6 % Orienation index
         image_pgm = strcat('input_images/objects/',type,'/image_',num2str(ii),'.pgm');
-        match(scene_pgm, image_pgm);
+        image_2_pgm = strcat('found_objects/',current_scene,'/image_',num2str(4),'.pgm');
+        %match(scene_pgm, image_pgm);
+        match(image_2_pgm, image_pgm);
     end
 end
 
 
 % --- Executes on button press in pushbutton13.
 function pushbutton13_Callback(hObject, eventdata, handles)
+global current_scene;
 image = handles.image_file;
 rgb_image = handles.image_file_rgb;
-bw_image = imbinarize(image,0.45);
+bw_image = imbinarize(image,0.5);
 canny_image = edge(bw_image,'canny');
-after_dilate = imdilate(canny_image,strel('disk',4));
+se = strel('disk',2);
+after_dilate = imdilate(canny_image,se);
+[label,total] = bwlabel(after_dilate,8);
+bounding_boxes = regionprops(label, 'BoundingBox', 'Area');
+count = 1;
+figure
+for k = 1 : length(bounding_boxes)
+    coord = bounding_boxes(k).BoundingBox;
+    cropped_image = imcrop(image,[coord(1),coord(2),coord(3),coord(4)]);
+    [rows, cols, ~] = size(cropped_image);
+    if rows*cols > 8000  
+        subplot(4,3,count);
+        imshow(cropped_image);
+        imwrite(cropped_image,strcat('found_objects/',current_scene,'/image_',num2str(count),'.pgm'),'pgm');
+        count = count + 1;
+    end
+end
 figure()
 subplot(2,2,1);
 imshow(canny_image);
