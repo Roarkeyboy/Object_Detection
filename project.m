@@ -22,7 +22,7 @@ function varargout = project(varargin)
 
 % Edit the above text to modify the response to help project
 
-% Last Modified by GUIDE v2.5 03-May-2020 21:41:52
+% Last Modified by GUIDE v2.5 07-May-2020 11:11:15
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -354,12 +354,14 @@ figure
 for k = 1 : length(bounding_boxes)
     coord = bounding_boxes(k).BoundingBox;
     cropped_image = imcrop(image,[coord(1),coord(2),coord(3),coord(4)]);
+    % coords = [left, top, width, height]
     [rows, cols, ~] = size(cropped_image);
     if rows*cols > 8000  
         subplot(4,3,count);
         imshow(cropped_image);
         imwrite(cropped_image,strcat('found_objects/',current_scene,'/image_',num2str(count),'.pgm'),'pgm');
         count = count + 1;
+        
     end
 end
 figure()
@@ -380,3 +382,71 @@ for column = 1 : width
 end
 subplot(2,2,3);
 imshow(RGB);
+
+
+% --- Executes on button press in pushbutton15.
+function pushbutton15_Callback(hObject, eventdata, handles)
+
+global current_scene;
+%image = handles.image_file;
+scene_pgm = strcat('found_objects/',current_scene,'/',current_scene,'.pgm');
+type = char(handles.object_list(2));
+image_pgm = strcat('input_images/objects/',type,'/image_1.pgm');
+image_2_pgm = strcat('found_objects/',current_scene,'/image_4.pgm');
+%match(image_2_pgm, image_pgm);
+
+[~, ~, locs] = sift(image_pgm);
+[~, ~, locs_2] = sift(image_pgm);
+
+locs(:,3:4) = [];
+size_locs = size(locs);
+locs = reshape(locs,[size_locs(2) size_locs(1)]);
+
+locs_2(:,3:4) = [];
+size_locs_2 = size(locs_2);
+locs_2 = reshape(locs,[size_locs_2(2) size_locs_2(1)]);
+
+imwrite(imread(image_pgm),'test.jpg','jpg');
+test = imread('test.jpg');
+[F, ~, ~] = affinefundmatrix(locs, locs_2);
+
+%A = image_pgm;
+% rgb_image = handles.image_file_rgb;
+% A = rgb_image;
+F
+tform = affine2d(F);
+
+output = imwarp(test,tform);
+imshow(output);
+
+
+% --- Executes on button press in pushbutton16.
+function pushbutton16_Callback(hObject, eventdata, handles)
+global current_scene;
+%image = handles.image_file;
+scene_pgm = strcat('found_objects/',current_scene,'/',current_scene,'.pgm');
+type = char(handles.object_list(2));
+image_pgm = strcat('input_images/objects/',type,'/image_1.pgm');
+image_2_pgm = strcat('found_objects/',current_scene,'/image_4.pgm');
+%match(image_2_pgm, image_pgm);
+
+[~, ~, locs] = sift(image_pgm);
+[~, ~, locs_2] = sift(image_pgm);
+
+locs(:,3:4) = [];
+size_locs = size(locs);
+locs = reshape(locs,[size_locs(2) size_locs(1)]);
+
+locs_2(:,3:4) = [];
+size_locs_2 = size(locs_2);
+locs_2 = reshape(locs,[size_locs_2(2) size_locs_2(1)]);
+
+F = ransacfithomography(locs,locs_2,0.01)
+
+[newim, ~] = imTrans(image_pgm, F);
+imshow(newim);
+%tform = affine2d(F);
+
+%output = imwarp(test,tform);
+%imshow(output);
+
