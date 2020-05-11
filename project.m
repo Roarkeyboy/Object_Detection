@@ -22,7 +22,7 @@ function varargout = project(varargin)
 
 % Edit the above text to modify the response to help project
 
-% Last Modified by GUIDE v2.5 08-May-2020 18:46:15
+% Last Modified by GUIDE v2.5 11-May-2020 09:07:31
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -74,7 +74,7 @@ function varargout = project_OutputFcn(hObject, eventdata, handles)
 varargout{1} = handles.output;
 
 %
-%% Seperate objects
+%% Seperate objects - DELETE THIS
 % 
 function [label,total] = bounding_box(handles)
 bw_image = imbinarize(handles.image_file,0.55);
@@ -501,7 +501,7 @@ for ii = 1:numel(files)
     try
         num = match(scene_pgm, image_pgm, 0);
         temp = num;
-        if (temp > 12)
+        if (temp > 0)
             if (temp > max)
                 max = temp;
                 best = image_pgm;
@@ -544,3 +544,61 @@ for ii = 2:20
 end
 
 colormap(gray)
+
+%% https://au.mathworks.com/matlabcentral/fileexchange/30849-image-mosaic-using-sift
+% --- Executes on button press in pushbutton18.
+function pushbutton18_Callback(hObject, eventdata, handles)
+
+global current_scene;
+scene_pgm = strcat('found_objects/',current_scene,'/',current_scene,'.pgm');
+type = char(handles.object_list(6));
+image_pgm = strcat('input_images/objects/',type,'/image_1.pgm');
+
+[match_loc1, match_loc2] = new_match(scene_pgm,image_pgm);
+[H, corrPtIdx] = findHomography(match_loc2',match_loc1');
+%corrPtIdx
+
+ransac_match(scene_pgm,image_pgm,corrPtIdx);
+
+%H
+tform = projective2d(H'); % can use this or the below
+%tform = maketform('projective',H');
+image = imread(image_pgm);
+img21 = imwarp(image,tform); % reproject img2  % can use this or the below
+%img21 = imtransform(image,tform); % reproject img2
+figure
+subplot(1,2,1)
+imshow(scene_pgm);
+subplot(1,2,2)
+imshow(img21);
+
+[M1 N1 dim] = size(scene_pgm);
+[M2 N2 ~] = size(image_pgm);
+% do the mosaic
+pt = zeros(3,4);
+pt(:,1) = H*[1;1;1];
+pt(:,2) = H*[N2;1;1];
+pt(:,3) = H*[N2;M2;1];
+pt(:,4) = H*[1;M2;1];
+x2 = pt(1,:)./pt(3,:);
+y2 = pt(2,:)./pt(3,:);
+up = round(min(y2));
+Yoffset = 0;
+if up <= 0
+	Yoffset = -up+1;
+	up = 1;
+end
+left = round(min(x2));
+Xoffset = 0;
+if left<=0
+	Xoffset = -left+1;
+	left = 1;
+end
+[M3 N3 ~] = size(img21);
+imgout(up:up+M3-1,left:left+N3-1,:) = img21;
+	% img1 is above img21
+imgout(Yoffset+1:Yoffset+M1,Xoffset+1:Xoffset+N1,:) = scene_pgm;
+
+figure
+imshow(imgout);
+
