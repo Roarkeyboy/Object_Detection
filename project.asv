@@ -553,13 +553,9 @@ global current_scene;
 scene_pgm = strcat('found_objects/',current_scene,'/',current_scene,'.pgm');
 max = 0;
 temp = 0;
-matches = 0;
-best = 0;
-for ii = 1:length(handles.object_list)
+best = '';
+for ii = 18:18%length(handles.object_list)
     type = char(handles.object_list(ii));
-    disp('--------------------------------------');
-    printer = ['SEARCHING FOR ',type];
-    disp(printer);
     for jj = 1 : 1
         image_pgm = strcat('input_images/objects/',type,'/image_',num2str(jj),'.pgm');
         [match_loc1, match_loc2] = new_match(scene_pgm,image_pgm,0);
@@ -568,42 +564,35 @@ for ii = 1:length(handles.object_list)
         [H, corrPtIdx] = findHomography(match_loc2',match_loc1');
         [match_loc1,match_loc2,num] = ransac_match(scene_pgm,image_pgm,corrPtIdx,0);
         temp = num;
-        if temp > max 
-            if (temp > 4)
+        if (temp > 3)
+            if temp > max
                 max = temp;
                 best = image_pgm;
                 %best_loc = match_loc2;
             end      
         end
+        if (best ~= '')
+            
     end
-    if (best == 0)
-        printer2 = ['No good match for ',type];
-        disp(printer2);
-    else 
-        matches = matches + 1;
-    end
-    scene = imread(scene_pgm);
-    %imshow(imread(best));
-    if (matches == 1)
-        image = imread(best);
-        app = appendimages(scene,image);
-        app2 = image;
-        imagesc(app); axis(handles.axes1, 'equal','tight','off')
-    elseif (matches > 1)
-        try
+    try
+        %imshow(imread(best));
+        if (matches == 1)
+            image = imread(best);
+            app = appendimages(scene,image);
+            app2 = image;
+            imagesc(app); axis(handles.axes1, 'equal','tight','off')
+        elseif (matches < 1)
             im_2 = imread(best);
-            %matches = matches + 1;
+            matches = matches + 1;
             app2 = appendimages2(app2,im_2,scene,ii,matches); % apends images downwards
             app = appendimages(scene,app2);
             imagesc(app); axis(handles.axes1, 'equal','tight','off')
-        catch
-            continue
         end
-        
-
+        % append here
+    catch
+        printer2 = ['No good match for ',type];
+        disp(printer2);
     end
-best = 0;
-max = 0;
 end
 
 % type = char(handles.object_list(6));
