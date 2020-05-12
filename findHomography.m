@@ -5,7 +5,7 @@ function [H corrPtIdx] = findHomography(pts1,pts2)
 %	corrPtIdx is the indices of inliers.
 coef.minPtNum = 4;
 coef.iterNum = 30;
-coef.thDist = 2; % was 4 originally
+coef.thDist = 1; % was 4 originally
 coef.thInlrRatio = .1;
 [H corrPtIdx] = ransac1(pts1,pts2,coef,@solveHomo,@calcDist);
 end

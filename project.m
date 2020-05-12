@@ -305,7 +305,7 @@ for jj = 1:20 % Object list index
         if (size(image,3) == 3) % If image is RGB, convert to gray
             image = rgb2gray(image);
         end
-        bw_image = imbinarize(image,0.55);
+        bw_image = imbinarize(image,0.6);
         se = strel('disk',4);
         after_erosion = imerode(~bw_image,se);
         se = strel('disk',4);
@@ -487,63 +487,6 @@ end
 %output = imwarp(test,tform);
 %imshow(output);
 
-function best = match_them(object)
-
-global current_scene
-max = 0;
-temp = 0;
-best = '';
-scene_pgm = strcat('found_objects/',current_scene,'/',current_scene,'.pgm');
-d = strcat('input_images/objects/',object,'/');
-files = dir(fullfile(d,'*.pgm'));
-for ii = 1:numel(files)
-    image_pgm = strcat('input_images/objects/',object,'/image_',num2str(ii),'.pgm');
-    try
-        num = match(scene_pgm, image_pgm, 0);
-        temp = num;
-        if (temp > 0)
-            if (temp > max)
-                max = temp;
-                best = image_pgm;
-            end
-        end
-    catch
-        disp('MATCH ERROR');
-    end 
-end
-
-
-% --- Executes on button press in pushbutton17.
-function pushbutton17_Callback(hObject, eventdata, handles)
-matches = 1;
-best = match_them('calculator');
-image = imread(best);
-
-global current_scene
-
-scene = imread(strcat('found_objects/',current_scene,'/',current_scene,'.pgm'));
-%scene = imread('found_objects/scene_1/scene_1.pgm');
-
-app = appendimages(scene,image);
-app2 = image;
-imagesc(app); axis(handles.axes1, 'equal','tight','off')
-for ii = 2:20
-    type = char(handles.object_list(ii));
-    best_2 = match_them(type);
-    if(best_2 == "")
-        X = ['NO GOOD MATCH FOR ',type];
-        disp(X);
-    else
-        im_2 = imread(best_2);
-        matches = matches + 1;
-        app2 = appendimages2(app2,im_2,scene,ii,matches); % apends images downwards
-        app = appendimages(scene,app2);
-        imagesc(app); axis(handles.axes1, 'equal','tight','off')
-    end   
-
-end
-
-colormap(gray)
 
 %% https://au.mathworks.com/matlabcentral/fileexchange/30849-image-mosaic-using-sift
 % --- Executes on button press in pushbutton18.
@@ -555,25 +498,38 @@ max = 0;
 temp = 0;
 matches = 0;
 best = 0;
-for ii = 1:length(handles.object_list)
+best_homo = 0;
+best_match_loc1 = 0;
+best_match_loc2 = 0;
+firstFlag = 1;
+for ii = 1:2%:length(handles.object_list)
     type = char(handles.object_list(ii));
     disp('--------------------------------------');
-    printer = ['SEARCHING FOR ',type];
+    printer = ['Searching for ',type];
     disp(printer);
-    for jj = 1 : 1
+    for jj = 1
         image_pgm = strcat('input_images/objects/',type,'/image_',num2str(jj),'.pgm');
-        [match_loc1, match_loc2] = new_match(scene_pgm,image_pgm,0);
-        printer = ['Performing RANSAC on ',strcat(type,'/image_',num2str(jj),'.pgm')];
-        disp(printer);
-        [H, corrPtIdx] = findHomography(match_loc2',match_loc1');
-        [match_loc1,match_loc2,num] = ransac_match(scene_pgm,image_pgm,corrPtIdx,0);
-        temp = num;
-        if temp > max 
-            if (temp > 4)
-                max = temp;
-                best = image_pgm;
-                %best_loc = match_loc2;
-            end      
+        try
+            disp('---- GETTING MATCHES ----');
+            [match_loc1, match_loc2] = new_match(scene_pgm,image_pgm,0);
+            disp('---- RANSAC MATCHES ----');
+            printer = ['Performing RANSAC on ',strcat(type,'/image_',num2str(jj),'.pgm')];
+            disp(printer);
+            [H, corrPtIdx] = findHomography(match_loc2',match_loc1');
+            [match_loc1,match_loc2,num] = ransac_match(scene_pgm,image_pgm,corrPtIdx,0);
+            temp = num;
+            if temp > max 
+                if (temp > 3) % need at least 6 matches 
+                    max = temp;
+                    best = image_pgm;
+                    best_homo = H;
+                    best_match_loc1 = match_loc1;
+                    best_match_loc2 = match_loc2;
+                    %best_loc = match_loc2;
+                end      
+            end
+        catch
+            disp('Image load error');
         end
     end
     if (best == 0)
@@ -583,76 +539,116 @@ for ii = 1:length(handles.object_list)
         matches = matches + 1;
     end
     scene = imread(scene_pgm);
-    %imshow(imread(best));
-    if (matches == 1)
+    if (matches == 1 && firstFlag)
         image = imread(best);
         app = appendimages(scene,image);
         app2 = image;
         imagesc(app); axis(handles.axes1, 'equal','tight','off')
+        firstFlag = 0;
     elseif (matches > 1)
         try
             im_2 = imread(best);
-            %matches = matches + 1;
             app2 = appendimages2(app2,im_2,scene,ii,matches); % apends images downwards
             app = appendimages(scene,app2);
             imagesc(app); axis(handles.axes1, 'equal','tight','off')
         catch
             continue
         end
-        
-
     end
+    draw_new_lines(scene,app,best_match_loc1,best_match_loc2);
+%     try
+%         draw_new_lines(scene,app,best_match_loc1,best_match_loc2);
+%     catch
+%         disp('COULDNT DRAW');
+%         continue
+%     end
+%imgout = warp_it(best_homo,best,scene_pgm); 
+%dilate_them(imgout,handles);
 best = 0;
 max = 0;
 end
-
-% type = char(handles.object_list(6));
-% image_pgm = strcat('input_images/objects/',type,'/image_1.pgm');
-% [match_loc1, match_loc2] = new_match(scene_pgm,image_pgm);
-% [H, corrPtIdx] = findHomography(match_loc2',match_loc1');
-% %corrPtIdx
-% 
-% ransac_match(scene_pgm,image_pgm,corrPtIdx);
-
-% %H
-% tform = projective2d(H'); % can use this or the below
-% %tform = maketform('projective',H');
-% image = imread(image_pgm);
-% img21 = imwarp(image,tform); % reproject img2  % can use this or the below
-% %img21 = imtransform(image,tform); % reproject img2
+%%
+function imgout = warp_it(H,best,scene_pgm)
+tform = projective2d(H'); % can use this or the below
+%tform = maketform('projective',H');
+image_pgm = best;
+image = imread(image_pgm);
+img21 = imwarp(image,tform); % reproject img2  % can use this or the below
+%img21 = imtransform(image,tform); % reproject img2
 % figure
 % subplot(1,2,1)
 % imshow(scene_pgm);
 % subplot(1,2,2)
 % imshow(img21);
-% 
-% [M1 N1 dim] = size(scene_pgm);
-% [M2 N2 ~] = size(image_pgm);
-% % do the mosaic
-% pt = zeros(3,4);
-% pt(:,1) = H*[1;1;1];
-% pt(:,2) = H*[N2;1;1];
-% pt(:,3) = H*[N2;M2;1];
-% pt(:,4) = H*[1;M2;1];
-% x2 = pt(1,:)./pt(3,:);
-% y2 = pt(2,:)./pt(3,:);
-% up = round(min(y2));
-% Yoffset = 0;
-% if up <= 0
-% 	Yoffset = -up+1;
-% 	up = 1;
-% end
-% left = round(min(x2));
-% Xoffset = 0;
-% if left<=0
-% 	Xoffset = -left+1;
-% 	left = 1;
-% end
-% [M3 N3 ~] = size(img21);
-% imgout(up:up+M3-1,left:left+N3-1,:) = img21;
-% 	% img1 is above img21
-% imgout(Yoffset+1:Yoffset+M1,Xoffset+1:Xoffset+N1,:) = scene_pgm;
-% 
-% figure
-% imshow(imgout);
+[M1 N1 dim] = size(scene_pgm);
+[M2 N2 ~] = size(image_pgm);
+% do the mosaic
+pt = zeros(3,4);
+pt(:,1) = H*[1;1;1];
+pt(:,2) = H*[N2;1;1];
+pt(:,3) = H*[N2;M2;1];
+pt(:,4) = H*[1;M2;1];
+x2 = pt(1,:)./pt(3,:);
+y2 = pt(2,:)./pt(3,:);
+up = round(min(y2));
+Yoffset = 0;
+if up <= 0
+	Yoffset = -up+1;
+	up = 1;
+end
+left = round(min(x2));
+Xoffset = 0;
+if left<=0
+	Xoffset = -left+1;
+	left = 1;
+end
+[M3 N3 ~] = size(img21);
+imgout(up:up+M3-1,left:left+N3-1,:) = img21;
+	% img1 is above img21
+imgout(Yoffset+1:Yoffset+M1,Xoffset+1:Xoffset+N1,:) = scene_pgm;
 
+%figure
+%imshow(imgout);
+
+%%
+function dilate_them(imgout,handles)
+
+global current_scene;
+%image = handles.image_file;
+image = imgout;
+rgb_image = handles.image_file_rgb;
+bw_image = imbinarize(image,0.6);
+canny_image = edge(bw_image,'canny');
+se = strel('disk',2);
+after_dilate = imdilate(canny_image,se);
+%[label,total] = bwlabel(after_dilate,8);
+
+%after_dilate = bwpropfilt(after_dilate, 'EulerNumber', [1 1]);
+%figure()
+%subplot(2,2,1);
+%imshow(canny_image);
+%subplot(2,2,2);
+%imshow(after_dilate);
+[height, width] = size(after_dilate);
+RGB = rgb_image;
+for column = 1 : width
+    for row = 1 : height
+        if (after_dilate(row, column) == 1)
+            RGB(row, column,1) = 0;
+            RGB(row, column,2) = 200;
+            RGB(row, column,3) = 0;
+        end
+    end
+end
+%subplot(2,2,3);
+imshow(RGB);
+
+function draw_new_lines(scene,app,best_match_loc1,best_match_loc2)
+imagesc(app);
+hold on;
+cols1 = size(scene,2);
+for i = 1: size(best_match_loc1,1)
+    line([best_match_loc1(i,1) best_match_loc2(i,1)+cols1], ...
+         [best_match_loc1(i,2) best_match_loc2(i,2)], 'Color', 'c');
+end
+hold off;
