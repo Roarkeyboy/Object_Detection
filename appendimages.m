@@ -7,6 +7,12 @@ function im = appendimages(image1, image2)
 % Select the image with the fewest rows and fill in enough empty rows
 %   to make it the same height as the other image.
 rows1 = size(image1,1);
+cols1 = size(image1,2);
+rows2 = size(image2,1);
+cols2 = size(image2,2);
+%rows2 = rows1/2;
+
+image2 = imresize(image2, [rows2, cols2]);
 rows2 = size(image2,1);
 
 if (rows1 < rows2)

@@ -503,7 +503,7 @@ best_match_loc1 = 0;
 best_match_loc2 = 0;
 new_db = cell(1,20);
 firstFlag = 1;
-for ii = 2:3%:length(handles.object_list)
+for ii = 1:5%:length(handles.object_list)
     type = char(handles.object_list(ii));
     disp('--------------------------------------');
     printer = ['Searching for ',type];
@@ -550,7 +550,7 @@ for ii = 2:3%:length(handles.object_list)
     elseif (matches > 1)
         try
             im_2 = imread(best);
-            app2 = appendimages2(app2,im_2,scene,ii,matches); % apends images downwards
+            app2 = appendimages2(app2,im_2,scene,matches); % apends images downwards
             app = appendimages(scene,app2);
             imagesc(app); axis(handles.axes1, 'equal','tight','off')
         catch
@@ -558,7 +558,11 @@ for ii = 2:3%:length(handles.object_list)
         end
     end
     if (matches > 0)
-        draw_new_lines(scene,app,new_db,matches)
+        try
+            draw_new_lines(scene,app,app2,new_db,matches)
+        catch
+            continue
+        end
     end
 %     try
 %         draw_new_lines(scene,app,best_match_loc1,best_match_loc2);
@@ -647,24 +651,41 @@ end
 %subplot(2,2,3);
 imshow(RGB);
 
-function draw_new_lines(scene,app,new_db,matches)
+function draw_new_lines(scene,app,app2,new_db,matches)
 colour_list = ['b','g','r','c','m','y','k','w','Brown','PaleYellow','Gray','Orange'];
 imagesc(app);
-hold on;
+%hold on;
 rows1 = 0;
 cols1 = size(scene,2);
+rows2 = size(scene,1);
+%%% NEED TO DO A MATRIX TRANSFORM FOR EACH ADDITIONAL MATCH TO MOVE LINES
+%%% ACCORDINGLY
 for kk = 1:matches
     best_match_loc1 = new_db{kk}(:,1:2); 
     best_match_loc2 = new_db{kk}(:,3:4);
-    if (kk > 1)
-        %rows1 = size(scene,2);
-        rows1 = size(app,1)/2;
-        cols1 = cols1*1.1; %% FIX THIS VALUE (1.1)
+    %rows1 = size(scene,2);
+    if (matches == 1)
+        rows1 = 0;
+    elseif(kk == 1)
+        rows1 = 0;
+    else
+        disp('kk');
+        disp(kk);
+        %offset = kk*rows2/matches;
+        offset = (matches-kk)*rows2/kk;
+        disp('offset')
+        disp(offset)
+        rows1 = (matches-1)*rows2/matches - offset;
+        disp('rows1')
+        disp(rows1)
+        %rows1 = kk*rows2 / matches;
+        %rows1 = (kk-1)*rows2/kk + 1*rows2 / matches;
+ 
     end
-    disp(kk)
+    %cols1 = cols1*1.1; %% FIX THIS VALUE (1.1)
     for i = 1: size(best_match_loc1,1)
         line([best_match_loc1(i,1) best_match_loc2(i,1)+cols1], ...
              [best_match_loc1(i,2) best_match_loc2(i,2)+rows1], 'Color', colour_list(kk));
     end
 end
-hold off;
+%hold off;
