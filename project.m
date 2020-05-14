@@ -501,8 +501,9 @@ best = 0;
 best_homo = 0;
 best_match_loc1 = 0;
 best_match_loc2 = 0;
+new_db = cell(1,20);
 firstFlag = 1;
-for ii = 1:2%:length(handles.object_list)
+for ii = 2:3%:length(handles.object_list)
     type = char(handles.object_list(ii));
     disp('--------------------------------------');
     printer = ['Searching for ',type];
@@ -524,7 +525,7 @@ for ii = 1:2%:length(handles.object_list)
                     best = image_pgm;
                     best_homo = H;
                     best_match_loc1 = match_loc1;
-                    best_match_loc2 = match_loc2;
+                    best_match_loc2 = match_loc2; 
                     %best_loc = match_loc2;
                 end      
             end
@@ -537,6 +538,7 @@ for ii = 1:2%:length(handles.object_list)
         disp(printer2);
     else 
         matches = matches + 1;
+        new_db(matches) = {[best_match_loc1,best_match_loc2]};
     end
     scene = imread(scene_pgm);
     if (matches == 1 && firstFlag)
@@ -555,7 +557,9 @@ for ii = 1:2%:length(handles.object_list)
             continue
         end
     end
-    draw_new_lines(scene,app,best_match_loc1,best_match_loc2);
+    if (matches > 0)
+        draw_new_lines(scene,app,new_db,matches)
+    end
 %     try
 %         draw_new_lines(scene,app,best_match_loc1,best_match_loc2);
 %     catch
@@ -643,12 +647,25 @@ end
 %subplot(2,2,3);
 imshow(RGB);
 
-function draw_new_lines(scene,app,best_match_loc1,best_match_loc2)
+function draw_new_lines(scene,app,new_db,matches)
+colour_list = ['b','g','r','c','m','y','k','w','Brown','PaleYellow','Gray','Orange'];
 imagesc(app);
+disp(matches)
 hold on;
+rows1 = 0;
 cols1 = size(scene,2);
-for i = 1: size(best_match_loc1,1)
-    line([best_match_loc1(i,1) best_match_loc2(i,1)+cols1], ...
-         [best_match_loc1(i,2) best_match_loc2(i,2)], 'Color', 'c');
+for kk = 1:matches
+    best_match_loc1 = new_db{matches}(:,1:2); 
+    best_match_loc2 = new_db{matches}(:,3:4);
+    if (matches > 1)
+        %rows1 = size(scene,2);
+        rows1 = size(app,1)/2;
+        cols1 = cols1*1.1;
+    end
+    hold on;
+    for i = 1: size(best_match_loc1,1)
+        line([best_match_loc1(i,1) best_match_loc2(i,1)+cols1], ...
+             [best_match_loc1(i,2) best_match_loc2(i,2)+rows1], 'Color', colour_list(matches));
+    end
 end
 hold off;
