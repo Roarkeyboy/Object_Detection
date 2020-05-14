@@ -650,22 +650,21 @@ imshow(RGB);
 function draw_new_lines(scene,app,new_db,matches)
 colour_list = ['b','g','r','c','m','y','k','w','Brown','PaleYellow','Gray','Orange'];
 imagesc(app);
-disp(matches)
 hold on;
 rows1 = 0;
 cols1 = size(scene,2);
 for kk = 1:matches
-    best_match_loc1 = new_db{matches}(:,1:2); 
-    best_match_loc2 = new_db{matches}(:,3:4);
-    if (matches > 1)
+    best_match_loc1 = new_db{kk}(:,1:2); 
+    best_match_loc2 = new_db{kk}(:,3:4);
+    if (kk > 1)
         %rows1 = size(scene,2);
         rows1 = size(app,1)/2;
-        cols1 = cols1*1.1;
+        cols1 = cols1*1.1; %% FIX THIS VALUE (1.1)
     end
-    hold on;
+    disp(kk)
     for i = 1: size(best_match_loc1,1)
         line([best_match_loc1(i,1) best_match_loc2(i,1)+cols1], ...
-             [best_match_loc1(i,2) best_match_loc2(i,2)+rows1], 'Color', colour_list(matches));
+             [best_match_loc1(i,2) best_match_loc2(i,2)+rows1], 'Color', colour_list(kk));
     end
 end
 hold off;
