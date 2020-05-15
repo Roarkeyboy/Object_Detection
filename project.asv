@@ -503,7 +503,7 @@ best_match_loc1 = 0;
 best_match_loc2 = 0;
 new_db = cell(1,20);
 firstFlag = 1;
-for ii = 2:3%:length(handles.object_list)
+for ii = 20%:length(handles.object_list)
     type = char(handles.object_list(ii));
     disp('--------------------------------------');
     printer = ['Searching for ',type];
@@ -564,9 +564,8 @@ for ii = 2:3%:length(handles.object_list)
         %imgout = imwarp(canny,tform);
         %subplot(2,1,2);
         %imshow(imgout);
-        
-        %%%imgout = warp_it(best_homo,best,scene_pgm,tform); 
-        %%%dilate_them(imgout,handles);
+        imgout = warp_it(best_homo,best,scene_pgm,tform); 
+        dilate_them(imgout,handles);
     elseif (matches > 1)
         try
             im_2 = imread(best);
@@ -579,7 +578,7 @@ for ii = 2:3%:length(handles.object_list)
     end
     if (matches > 0)
         try
-            draw_new_lines(scene,app,app2,new_db,matches)
+            %draw_new_lines(scene,app,app2,new_db,matches)
         catch
             continue
         end
