@@ -22,7 +22,7 @@ function varargout = project(varargin)
 
 % Edit the above text to modify the response to help project
 
-% Last Modified by GUIDE v2.5 22-May-2020 09:34:50
+% Last Modified by GUIDE v2.5 11-May-2020 09:07:31
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -73,6 +73,37 @@ function varargout = project_OutputFcn(hObject, eventdata, handles)
 % Get default command line output from handles structure
 varargout{1} = handles.output;
 
+%
+%% Seperate objects - DELETE THIS
+% 
+function [label,total] = bounding_box(handles)
+bw_image = imbinarize(handles.image_file,0.55);
+se = strel('disk',2);
+after_erosion = imerode(~bw_image,se);
+se = strel('disk',6);
+after_dilate = imdilate(after_erosion,se);
+[label,total] = bwlabel(after_dilate,8);
+%canny_image = edge(bw_image,'canny');
+%CH = bwconvhull(canny_image);
+
+
+%% CROP OUT INDIVIDUAL OBJECTS (CROP BUTTON)
+% --- Executes on button press in pushbutton1.
+function pushbutton1_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+[label,total] = bounding_box(handles);
+bounding_boxes = regionprops(label,'BoundingBox');
+figure();
+disp(strcat('Found :',num2str(total),' objects'));
+for ii = 1:total
+    coord = bounding_boxes(ii).BoundingBox;
+    cropped_image = imcrop(handles.image_file, [coord(1), coord(2), coord(3), coord(4)]);
+    subplot(4,5,ii);
+    imshow(cropped_image);
+end
+
 %% LOAD IN IMAGE (LOAD SCENE BUTTON)
 % --- Executes on button press in pushbutton2.
 function pushbutton2_Callback(hObject, eventdata, handles)
@@ -118,7 +149,10 @@ function pushbutton4_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA
 global current_scene
-image_pgm = imread(strcat('input_images/objects/calculator/image_2.pgm'));
+figure();
+subplot(2,2,1);
+image_pgm = imread(strcat('found_objects/',current_scene,'/image_2.pgm'));
+imshow(image_pgm);
 %canny_image = edge(image_pgm,'canny',0.3);
 %CH_objects = bwconvhull(canny_image,'Objects');
 bw_image = im2bw(image_pgm,0.55);
@@ -126,7 +160,9 @@ se = strel('disk',2);
 after_erosion = imerode(~bw_image,se);
 se = strel('disk',6);
 after_dilate = imdilate(after_erosion,se);
+subplot(2,2,2);
 bw_image = ~bw_image;
+imshow(bw_image);
 label = bwlabel(bw_image,8);
 stat=regionprops(label,'Centroid','Area','PixelIdxList');
 [maxValue,index] = max([stat.Area]);
@@ -136,16 +172,19 @@ for i=1:row
        bw_image(stat(i).PixelIdxList) = 0; % Remove all small regions except large area index
     end
 end
+subplot(2,2,3);
+imshow(bw_image);
 %[rows cols] = size(CH_objects)
 dim = size(bw_image);
 cols = round(dim(2)/2);
 rows = min(find(bw_image(:,cols)));
 boundary = bwtraceboundary(bw_image,[rows, cols],'N');
-figure()
+
+subplot(2,2,4);
 imshow(image_pgm)
 hold on;
 plot(boundary(:,2),boundary(:,1),'g','LineWidth',3); % Change colour each time it iterates
-hold off;
+
 %% DRAW OUTLINES OVER ALL OBJECTS (DRAW OUTLINES BUTTON)
 % --- Executes on button press in pushbutton5.
 function pushbutton5_Callback(hObject, eventdata, handles)
@@ -192,15 +231,20 @@ end
 function pushbutton6_Callback(hObject, eventdata, handles)
 global current_scene
 scene_pgm = strcat('found_objects/',current_scene,'/scene_1.pgm');
-image_pgm = strcat('input_images/objects/canned_beans/image_1.pgm');
+image_pgm = strcat('found_objects/',current_scene,'/image_2.pgm');
 match(scene_pgm, image_pgm,1);
 
-%% SIFT MATCH OF ALL IMAGES OF OBJECT IN SCENE (SIFT MATCHES BUTTON)
+%% SIFT MATCH OF ALL OBJECTS IN SCENE (SIFT MATCHES BUTTON)
 % --- Executes on button press in pushbutton7.
 function pushbutton7_Callback(hObject, eventdata, handles)
 global current_scene
 scene_pgm = strcat('found_objects/',current_scene,'/',current_scene,'.pgm');
-
+% d = strcat('found_objects/',current_scene,'/');
+% files = dir(fullfile(d,'*.pgm'));
+% for ii = 1:numel(files)-1
+%     image_pgm = strcat('found_objedcts/',current_scene,'/image_',num2str(ii),'.pgm');
+%     match(scene_pgm, image_pgm,1);
+% end
 d = strcat('input_images/objects/canned_beans/');
 files = dir(fullfile(d,'*.pgm'));
 for ii = 1:numel(files)
@@ -222,7 +266,7 @@ for ii = 1:6
     [~, des, locs] = sift(image_pgm);
     save(strcat('input_images/objects/calculator/image_',num2str(ii),'.mat'), 'des','locs');
 end
-%% ADD EACH DETECTED OBJECT BESIDE MAIN IMAGE (APPEND BUTTON)
+%% ADD EACH DETECTED OBJECT BESIDE MAIN IMAGE (MATCH DISPLAY BUTTON)
 % --- Executes on button press in pushbutton10.
 function pushbutton10_Callback(hObject, eventdata, handles)
 global current_scene;
@@ -231,9 +275,12 @@ image1 = imread('found_objects/scene_1/image_1.pgm');
 image2 = imread('found_objects/scene_1/image_2.pgm');
 image3 = imread('found_objects/scene_1/image_3.pgm');
 image4 = imread('found_objects/scene_1/image_4.pgm');
+%app = appendimages(scene1,image1);
+%app2 = appendimages2(image1,image2,scene1,1);
+%app = appendimages(scene1,app2);
 app = appendimages(scene1,image1);
 app2 = image1;
-for ii = 2:4
+for ii = 2
     im = imread(strcat('found_objects/scene_1/image_',num2str(ii),'.pgm')); % make this read the detected image
     app2 = appendimages2(app2,im,scene1,ii); % apends images downwards
     app = appendimages(scene1,app2);
@@ -242,8 +289,7 @@ end
 
 colormap(gray)
 
-%% Read Folder and Covert to PGM button
-% Used this to iterate over folders of images and convert them to PGM
+% Used this to add folders one and convert to pgm 
 % --- Executes on button press in pushbutton11.
 function pushbutton11_Callback(hObject, eventdata, handles)
 %type = 'wallet_2';
@@ -282,7 +328,6 @@ for jj = 1:20 % Object list index
     end
 end
 
-%% Best Match Button
 % this compares the found object with the actual object and its
 % orientations
 % --- Executes on button press in pushbutton12.
@@ -292,26 +337,23 @@ max = 0;
 temp = 0;
 best = 0;
 scene_pgm = strcat('found_objects/',current_scene,'/',current_scene,'.pgm');
-for jj = 3:3 % Object list index - 3 is Canned Beans
+for jj = 3:3 % Object list index - 2 is Calculator
     type = char(handles.object_list(jj));
     for ii = 1:6 % Orienation index
         image_pgm = strcat('input_images/objects/',type,'/image_',num2str(ii),'.pgm');
+        image_2_pgm = strcat('found_objects/',current_scene,'/image_',num2str(1),'.pgm');
         %match(scene_pgm, image_pgm,1);
-        num = match(scene_pgm, image_pgm,0);
+        num = match(image_2_pgm, image_pgm,1);
         temp = num;
         if (temp > max)
             max = temp;
-            best = image_pgm;
+            best = image_2_pgm;
         end
     end
-match(scene_pgm, best,1);
-
-%imagesc(imread(best)); axis(handles.axes1, 'equal','tight','off')
+imagesc(imread(best)); axis(handles.axes1, 'equal','tight','off')
 end
-handles.best_test = best;
-guidata(hObject,handles);
 
-%% Test Outline Button (Draws outlines over all objects) (likely delete this)
+
 % --- Executes on button press in pushbutton13.
 function pushbutton13_Callback(hObject, eventdata, handles)
 global current_scene;
@@ -356,6 +398,95 @@ for column = 1 : width
 end
 subplot(2,2,3);
 imshow(RGB);
+
+
+% --- Executes on button press in pushbutton15.
+function pushbutton15_Callback(hObject, eventdata, handles)
+
+global current_scene;
+%image = handles.image_file;
+scene_pgm = strcat('found_objects/',current_scene,'/',current_scene,'.pgm');
+type = char(handles.object_list(2));
+image_pgm = strcat('input_images/objects/',type,'/image_1.pgm');
+image_2_pgm = strcat('found_objects/',current_scene,'/image_4.pgm');
+%match(image_2_pgm, image_pgm,0);
+
+[~, ~, locs] = sift(image_pgm);
+[~, ~, locs_2] = sift(image_pgm);
+
+locs(:,3:4) = [];
+size_locs = size(locs);
+locs = reshape(locs,[size_locs(2) size_locs(1)]);
+
+locs_2(:,3:4) = [];
+size_locs_2 = size(locs_2);
+locs_2 = reshape(locs,[size_locs_2(2) size_locs_2(1)]);
+
+imwrite(imread(image_pgm),'test.jpg','jpg');
+test = imread('test.jpg');
+[F, ~, ~] = affinefundmatrix(locs, locs_2);
+
+%A = image_pgm;
+% rgb_image = handles.image_file_rgb;
+% A = rgb_image;
+F
+tform = affine2d(F);
+
+output = imwarp(test,tform);
+imshow(output);
+
+
+% --- Executes on button press in pushbutton16.
+function pushbutton16_Callback(hObject, eventdata, handles)
+global current_scene;
+%image = handles.image_file;
+scene_pgm = strcat('found_objects/',current_scene,'/',current_scene,'.pgm');
+type = char(handles.object_list(2));
+image_pgm = strcat('input_images/objects/',type,'/image_1.pgm');
+image_2_pgm = strcat('found_objects/',current_scene,'/image_4.pgm');
+%match(image_2_pgm, image_pgm,0);
+
+im = imread(image_pgm);
+im_2 = imread(image_2_pgm);
+
+[~, ~, locs] = sift(image_pgm);
+[~, ~, locs_2] = sift(image_2_pgm);
+
+locs(:,3:4) = [];
+size_locs = size(locs);
+locs = reshape(locs,[size_locs(2) size_locs(1)]);
+disp(size(locs))
+imshow(im);
+
+locs_2(:,3:4) = [];
+size_locs_2 = size(locs_2);
+locs_2 = reshape(locs_2,[size_locs_2(2) size_locs_2(1)]);
+disp(size(locs_2))
+imshow(im_2);
+
+x1 = [locs(2,:); locs(1,:); ones(1, length(locs))];
+x2 = [locs_2(2,:); locs_2(1,:); ones(1, length(locs))];
+t = 0.001;
+[F, inliers] = ransacfitfundmatrix(x1,x2,t);
+
+% Display both images overlayed with inlying matched feature points
+show(double(image_pgm)+double(image_2_pgm),4), set(4,'name','Inlying matches'), hold on    
+plot(locs(2,inliers),locs(1,inliers),'r+');
+plot(locs_2(2,inliers),locs_2(1,inliers),'g+');    
+
+for n = inliers
+    line([locs(2,n) locs_2(2,n)], [locs(1,n) locs_2(1,n)],'color',[0 0 1])
+end
+
+%F = ransacfithomography(locs,locs_2,0.01)
+
+%[newim, ~] = imTrans(image_pgm, F);
+%imshow(newim);
+%tform = affine2d(F);
+
+%output = imwarp(test,tform);
+%imshow(output);
+
 
 %% https://au.mathworks.com/matlabcentral/fileexchange/30849-image-mosaic-using-sift
 % --- Executes on button press in pushbutton18.
@@ -433,14 +564,9 @@ for ii = 15:15%:length(handles.object_list)
         %imgout = imwarp(canny,tform);
         %subplot(2,1,2);
         %imshow(imgout);
+        
         imgout = warp_it(best_homo,best,scene_pgm,tform); 
-        [rows, cols, ~] = size(imgout);
-        [rows2, cols2, ~] = size(scene);
-        if (rows*cols <= rows2*cols2)  
-            dilate_them(imgout,handles);
-        else
-            disp('ERROR TRANSFORMING');
-        end
+        dilate_them(imgout,handles);
     elseif (matches > 1)
         try
             im_2 = imread(best);
@@ -522,7 +648,11 @@ after_dilate = imdilate(canny_image,se);
 %[label,total] = bwlabel(after_dilate,8);
 
 %after_dilate = bwpropfilt(after_dilate, 'EulerNumber', [1 1]);
-
+%figure()
+%subplot(2,2,1);
+%imshow(canny_image);
+%subplot(2,2,2);
+%imshow(after_dilate);
 [height, width] = size(after_dilate);
 RGB = rgb_image;
 for column = 1 : width
@@ -534,6 +664,7 @@ for column = 1 : width
         end
     end
 end
+%subplot(2,2,3);
 imshow(RGB);
 
 function draw_new_lines(scene,app,app2,new_db,matches)
@@ -575,18 +706,3 @@ for kk = 1:matches
     end
 end
 %hold off;
-
-%% RANSAC Best Match button
-% performs RANSAC on best image found in Best Match Button
-% --- Executes on button press in pushbutton19.
-function pushbutton19_Callback(hObject, eventdata, handles)
-global current_scene;
-best = handles.best_test;
-scene_pgm = strcat('found_objects/',current_scene,'/',current_scene,'.pgm');
-image_pgm = best;
-[match_loc1, match_loc2] = new_match(scene_pgm,image_pgm,0);
-printer = ['Performing RANSAC on ',best];
-disp(printer);
-[H, corrPtIdx] = findHomography(match_loc2',match_loc1');
-[match_loc1,match_loc2,num] = ransac_match(scene_pgm,image_pgm,corrPtIdx,1);
-           
