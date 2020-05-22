@@ -372,7 +372,7 @@ best_match_loc1 = 0;
 best_match_loc2 = 0;
 new_db = cell(1,20);
 firstFlag = 1;
-for ii = 2:2%:length(handles.object_list)
+for ii = 1:6%:length(handles.object_list)
     type = char(handles.object_list(ii));
     disp('--------------------------------------');
     printer = ['Searching for ',type];
@@ -416,17 +416,18 @@ for ii = 2:2%:length(handles.object_list)
         app2 = image;
         imagesc(app); axis(handles.axes1, 'equal','tight','off')
         firstFlag = 0;
-        
-        [tform, ~, ~] = ...
-        estimateGeometricTransform(best_match_loc2, best_match_loc1, 'affine');
-        imgout = warp_it(best_homo,best,scene,tform); 
-        [rows, cols, ~] = size(imgout);
-        [rows2, cols2, ~] = size(scene);
-        if (rows*cols <= rows2*cols2)  
-            dilate_them(imgout,handles);
-        else
-            disp('ERROR TRANSFORMING');
-        end
+%  UNCOMMENT THIS WHEN WORKING ON THE OUTLINE SECTION
+%         [tform, ~, ~] = ...
+%         estimateGeometricTransform(best_match_loc2, best_match_loc1, 'affine');
+%         imgout = warp_it(best_homo,best,scene,tform); 
+%         [rows, cols, ~] = size(imgout);
+%         [rows2, cols2, ~] = size(scene);
+%         if (rows*cols <= rows2*cols2)  
+%             dilate_them(imgout,handles);
+%         else
+%             disp('ERROR TRANSFORMING');
+%         end
+%
     elseif (matches > 1)
         try
             im_2 = imread(best);
@@ -437,13 +438,13 @@ for ii = 2:2%:length(handles.object_list)
             continue
         end
     end
-%     if (matches > 0)
-%         try
-%             draw_new_lines(scene,app,app2,new_db,matches)
-%         catch
-%             continue
-%         end
-%     end
+     if (matches > 0)
+         try
+             draw_new_lines(scene,app,app2,new_db,matches)
+         catch
+             continue
+         end
+     end
 
 best = 0;
 max = 0;
@@ -533,29 +534,32 @@ rows2 = size(scene,1);
 %%% NEED TO DO A MATRIX TRANSFORM FOR EACH ADDITIONAL MATCH TO MOVE LINES
 %%% ACCORDINGLY
 for kk = 1:matches
-    best_match_loc1 = new_db{kk}(:,1:2); 
-    best_match_loc2 = new_db{kk}(:,3:4);
+    best_match_loc1 = new_db{kk}(:,1:2); % scene matches
+    best_match_loc2 = new_db{kk}(:,3:4); % object matches
+    best_match_loc2 = best_match_loc2/kk;
     
     %rows1 = size(scene,2);
     if (matches == 1)
         rows1 = 0;
-    elseif(kk == 1)
+    elseif(kk ==1)
         rows1 = 0;
+    elseif(kk == 2) 
+        rows1 = ((kk-1)*rows2) / matches;
     else
         disp('kk');
         disp(kk);
         %offset = kk*rows2/matches;
-        offset = (matches-kk)*rows2/kk;
-        disp('offset')
-        disp(offset)
-        rows1 = (matches-1)*rows2/matches - offset;
+        %offset = (matches-kk)*rows2/kk;
+       
+        %disp('offset')
+        %disp(offset)
+        rows1 = ((kk-1)*rows2) / matches;
         disp('rows1')
         disp(rows1)
         %rows1 = kk*rows2 / matches;
         %rows1 = (kk-1)*rows2/kk + 1*rows2 / matches;
  
     end
-    %cols1 = cols1*1.1; %% FIX THIS VALUE (1.1)
     for i = 1: size(best_match_loc1,1)
         line([best_match_loc1(i,1) best_match_loc2(i,1)+cols1], ...
              [best_match_loc1(i,2) best_match_loc2(i,2)+rows1], 'Color', colour_list(kk));
