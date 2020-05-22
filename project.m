@@ -536,29 +536,17 @@ rows2 = size(scene,1);
 for kk = 1:matches
     best_match_loc1 = new_db{kk}(:,1:2); % scene matches
     best_match_loc2 = new_db{kk}(:,3:4); % object matches
-    best_match_loc2 = best_match_loc2/kk;
-    
-    %rows1 = size(scene,2);
+    if (((matches == 1) ||(matches == 2)) && ((kk == 2) || (kk == 1)))
+        best_match_loc2 = best_match_loc2;
+    else
+        best_match_loc2 = best_match_loc2/(matches);
+    end
     if (matches == 1)
         rows1 = 0;
-    elseif(kk ==1)
-        rows1 = 0;
-    elseif(kk == 2) 
-        rows1 = ((kk-1)*rows2) / matches;
+    elseif(matches > 2) && (kk == 1)
+        rows1 = 0 ;     
     else
-        disp('kk');
-        disp(kk);
-        %offset = kk*rows2/matches;
-        %offset = (matches-kk)*rows2/kk;
-       
-        %disp('offset')
-        %disp(offset)
         rows1 = ((kk-1)*rows2) / matches;
-        disp('rows1')
-        disp(rows1)
-        %rows1 = kk*rows2 / matches;
-        %rows1 = (kk-1)*rows2/kk + 1*rows2 / matches;
- 
     end
     for i = 1: size(best_match_loc1,1)
         line([best_match_loc1(i,1) best_match_loc2(i,1)+cols1], ...
