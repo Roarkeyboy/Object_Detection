@@ -370,9 +370,11 @@ best = 0;
 best_homo = 0;
 best_match_loc1 = 0;
 best_match_loc2 = 0;
+dilated = 0;
+scene = imread(scene_pgm);
 new_db = cell(1,20);
 firstFlag = 1;
-for ii = 10:20%:length(handles.object_list)
+for ii = 1:20%:length(handles.object_list)
     type = char(handles.object_list(ii));
     disp('--------------------------------------');
     printer = ['Searching for ',type];
@@ -389,13 +391,12 @@ for ii = 10:20%:length(handles.object_list)
             [match_loc1,match_loc2,num] = ransac_match(scene_pgm,image_pgm,corrPtIdx,0);
             temp = num;
             if temp > max 
-                if (temp > 7) % need at least 7 matches 
+                if (temp > 6) % need at least 7 matches 
                     max = temp;
                     best = image_pgm;
                     best_homo = H;
                     best_match_loc1 = match_loc1;
                     best_match_loc2 = match_loc2; 
-                    %best_loc = match_loc2;
                 end      
             end
         catch
@@ -408,26 +409,26 @@ for ii = 10:20%:length(handles.object_list)
     else 
         matches = matches + 1;
         new_db(matches) = {[best_match_loc1,best_match_loc2]};
-    end
-    scene = imread(scene_pgm);
+ %%  UNCOMMENT THIS WHEN WORKING ON THE OUTLINE SECTION
+%         [tform, ~, ~] = estimateGeometricTransform(best_match_loc2, best_match_loc1, 'affine');
+%         %estimateGeometricTransform(best_match_loc2(3:7,:), best_match_loc1(3:7,:), 'affine');
+%         
+%         imgout = warp_it(best_homo,best,scene,tform); 
+%         [rows, cols, ~] = size(imgout);
+%         [rows2, cols2, ~] = size(scene);
+%         if (rows*cols <= rows2*cols2)  
+%             dilated = dilate_them(imgout,handles,dilated);
+%         else
+%             disp('ERROR TRANSFORMING');
+%         end
+ %%
+    end 
     if (matches == 1 && firstFlag)
         image = imread(best);
         app = appendimages(scene,image);
         app2 = image;
         imagesc(app); axis(handles.axes1, 'equal','tight','off')
         firstFlag = 0;
-%  UNCOMMENT THIS WHEN WORKING ON THE OUTLINE SECTION
-%         [tform, ~, ~] = ...
-%         estimateGeometricTransform(best_match_loc2, best_match_loc1, 'affine');
-%         imgout = warp_it(best_homo,best,scene,tform); 
-%         [rows, cols, ~] = size(imgout);
-%         [rows2, cols2, ~] = size(scene);
-%         if (rows*cols <= rows2*cols2)  
-%             dilate_them(imgout,handles);
-%         else
-%             disp('ERROR TRANSFORMING');
-%         end
-%
     elseif (matches > 1)
         try
             im_2 = imread(best);
@@ -439,12 +440,12 @@ for ii = 10:20%:length(handles.object_list)
         end
     end
      if (matches > 0)
-         try
-             draw_new_lines(scene,app,app2,new_db,matches)
-         catch
-             continue
-         end
-     end
+          try
+              draw_new_lines(scene,app,app2,new_db,matches)
+          catch
+              continue
+          end
+      end
 
 best = 0;
 max = 0;
@@ -459,7 +460,7 @@ image = imread(image_pgm);
 img21 = imwarp(image,tform); % reproject img2  % can use this or the below
 %img21 = imtransform(image,tform); % reproject img2
 
-canny = edge(image,'canny',0.6);
+canny = edge(image,'canny',0.5);
 img21 = imwarp(canny,tform);
 [M1 N1 dim] = size(scene_pgm);
 [M2 N2 ~] = size(image_pgm);
@@ -486,30 +487,24 @@ end
 [M3 N3 ~] = size(img21);
 imgout(up:up+M3-1,left:left+N3-1,:) = img21;
 	% img1 is above img21
-imgout(Yoffset+1:Yoffset+M1,Xoffset+1:Xoffset+N1,:) = scene_pgm;
+%imgout(Yoffset+1:Yoffset+M1,Xoffset+1:Xoffset+N1,:) = scene_pgm;
 
 imgout(Yoffset+1:Yoffset+M1,Xoffset+1:Xoffset+N1,:) = 0;
 imgout(up:up+M3-1,left:left+N3-1,:) = img21;
 imgout = imresize(imgout,[M1 N1]);
 %imshow(imgout);
 %%
-function dilate_them(imgout,handles)
+function dilated = dilate_them(imgout,handles,dilated)
 
-global current_scene;
-%image = handles.image_file;
 image = imgout;
-rgb_image = handles.image_file_rgb;
-
-%bw_image = imbinarize(image,0.6);
-%canny_image = edge(bw_image,'canny');
-canny_image = image;
+if (dilated == 0)
+    rgb_image = handles.image_file_rgb;
+else
+    rgb_image = dilated;
+end
 
 se = strel('disk',2);
-after_dilate = imdilate(canny_image,se);
-%[label,total] = bwlabel(after_dilate,8);
-
-%after_dilate = bwpropfilt(after_dilate, 'EulerNumber', [1 1]);
-
+after_dilate = imdilate(image,se);
 [height, width] = size(after_dilate);
 RGB = rgb_image;
 for column = 1 : width
@@ -522,6 +517,8 @@ for column = 1 : width
     end
 end
 imshow(RGB);
+
+dilated = RGB;
 
 
 function draw_new_lines(scene,app,app2,new_db,matches)
