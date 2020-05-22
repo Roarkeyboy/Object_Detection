@@ -305,11 +305,13 @@ for jj = 3:3 % Object list index - 3 is Canned Beans
         end
     end
 match(scene_pgm, best,1);
-hanbest_test = best;
+
 %imagesc(imread(best)); axis(handles.axes1, 'equal','tight','off')
 end
+handles.best_test = best;
+guidata(hObject,handles);
 
-
+%% Test Outline Button (Draws outlines over all objects) (likely delete this)
 % --- Executes on button press in pushbutton13.
 function pushbutton13_Callback(hObject, eventdata, handles)
 global current_scene;
@@ -354,95 +356,6 @@ for column = 1 : width
 end
 subplot(2,2,3);
 imshow(RGB);
-
-
-% --- Executes on button press in pushbutton15.
-function pushbutton15_Callback(hObject, eventdata, handles)
-
-global current_scene;
-%image = handles.image_file;
-scene_pgm = strcat('found_objects/',current_scene,'/',current_scene,'.pgm');
-type = char(handles.object_list(2));
-image_pgm = strcat('input_images/objects/',type,'/image_1.pgm');
-image_2_pgm = strcat('found_objects/',current_scene,'/image_4.pgm');
-%match(image_2_pgm, image_pgm,0);
-
-[~, ~, locs] = sift(image_pgm);
-[~, ~, locs_2] = sift(image_pgm);
-
-locs(:,3:4) = [];
-size_locs = size(locs);
-locs = reshape(locs,[size_locs(2) size_locs(1)]);
-
-locs_2(:,3:4) = [];
-size_locs_2 = size(locs_2);
-locs_2 = reshape(locs,[size_locs_2(2) size_locs_2(1)]);
-
-imwrite(imread(image_pgm),'test.jpg','jpg');
-test = imread('test.jpg');
-[F, ~, ~] = affinefundmatrix(locs, locs_2);
-
-%A = image_pgm;
-% rgb_image = handles.image_file_rgb;
-% A = rgb_image;
-F
-tform = affine2d(F);
-
-output = imwarp(test,tform);
-imshow(output);
-
-
-% --- Executes on button press in pushbutton16.
-function pushbutton16_Callback(hObject, eventdata, handles)
-global current_scene;
-%image = handles.image_file;
-scene_pgm = strcat('found_objects/',current_scene,'/',current_scene,'.pgm');
-type = char(handles.object_list(2));
-image_pgm = strcat('input_images/objects/',type,'/image_1.pgm');
-image_2_pgm = strcat('found_objects/',current_scene,'/image_4.pgm');
-%match(image_2_pgm, image_pgm,0);
-
-im = imread(image_pgm);
-im_2 = imread(image_2_pgm);
-
-[~, ~, locs] = sift(image_pgm);
-[~, ~, locs_2] = sift(image_2_pgm);
-
-locs(:,3:4) = [];
-size_locs = size(locs);
-locs = reshape(locs,[size_locs(2) size_locs(1)]);
-disp(size(locs))
-imshow(im);
-
-locs_2(:,3:4) = [];
-size_locs_2 = size(locs_2);
-locs_2 = reshape(locs_2,[size_locs_2(2) size_locs_2(1)]);
-disp(size(locs_2))
-imshow(im_2);
-
-x1 = [locs(2,:); locs(1,:); ones(1, length(locs))];
-x2 = [locs_2(2,:); locs_2(1,:); ones(1, length(locs))];
-t = 0.001;
-[F, inliers] = ransacfitfundmatrix(x1,x2,t);
-
-% Display both images overlayed with inlying matched feature points
-show(double(image_pgm)+double(image_2_pgm),4), set(4,'name','Inlying matches'), hold on    
-plot(locs(2,inliers),locs(1,inliers),'r+');
-plot(locs_2(2,inliers),locs_2(1,inliers),'g+');    
-
-for n = inliers
-    line([locs(2,n) locs_2(2,n)], [locs(1,n) locs_2(1,n)],'color',[0 0 1])
-end
-
-%F = ransacfithomography(locs,locs_2,0.01)
-
-%[newim, ~] = imTrans(image_pgm, F);
-%imshow(newim);
-%tform = affine2d(F);
-
-%output = imwarp(test,tform);
-%imshow(output);
-
 
 %% https://au.mathworks.com/matlabcentral/fileexchange/30849-image-mosaic-using-sift
 % --- Executes on button press in pushbutton18.
@@ -504,7 +417,7 @@ for ii = 15:15%:length(handles.object_list)
         imagesc(app); axis(handles.axes1, 'equal','tight','off')
         firstFlag = 0;
         
-        [tform, inlierImagePoints, inlierScenePoints] = ...
+        [tform, ~, ~] = ...
         estimateGeometricTransform(best_match_loc2, best_match_loc1, 'affine');
         %figure;
         %showMatchedFeatures(image, scene, inlierImagePoints, ...
@@ -520,9 +433,14 @@ for ii = 15:15%:length(handles.object_list)
         %imgout = imwarp(canny,tform);
         %subplot(2,1,2);
         %imshow(imgout);
-        
-        imgout = warp_it(best_homo,best,scene_pgm,tform); 
-        dilate_them(imgout,handles);
+        imgout = warp_it(best_homo,best,scene,tform); 
+        [rows, cols, ~] = size(imgout);
+        [rows2, cols2, ~] = size(scene);
+        if (rows*cols <= rows2*cols2)  
+            dilate_them(imgout,handles);
+        else
+            disp('ERROR TRANSFORMING');
+        end
     elseif (matches > 1)
         try
             im_2 = imread(best);
@@ -556,7 +474,6 @@ img21 = imwarp(image,tform); % reproject img2  % can use this or the below
 
 canny = edge(image,'canny',0.6);
 img21 = imwarp(canny,tform);
-
 [M1 N1 dim] = size(scene_pgm);
 [M2 N2 ~] = size(image_pgm);
 % do the mosaic
@@ -583,10 +500,8 @@ end
 imgout(up:up+M3-1,left:left+N3-1,:) = img21;
 	% img1 is above img21
 imgout(Yoffset+1:Yoffset+M1,Xoffset+1:Xoffset+N1,:) = scene_pgm;
-
-%figure
-%imshow(imgout);
-
+imgout = imresize(imgout,[M1 N1]);
+imshow(imgout);
 %%
 function dilate_them(imgout,handles)
 
@@ -604,11 +519,7 @@ after_dilate = imdilate(canny_image,se);
 %[label,total] = bwlabel(after_dilate,8);
 
 %after_dilate = bwpropfilt(after_dilate, 'EulerNumber', [1 1]);
-%figure()
-%subplot(2,2,1);
-%imshow(canny_image);
-%subplot(2,2,2);
-%imshow(after_dilate);
+
 [height, width] = size(after_dilate);
 RGB = rgb_image;
 for column = 1 : width
@@ -620,8 +531,8 @@ for column = 1 : width
         end
     end
 end
-%subplot(2,2,3);
-imshow(RGB);
+%imshow(RGB);
+
 
 function draw_new_lines(scene,app,app2,new_db,matches)
 colour_list = ['b','g','r','c','m','y','k','w','Brown','PaleYellow','Gray','Orange'];
@@ -663,14 +574,16 @@ for kk = 1:matches
 end
 %hold off;
 
-
+%% RANSAC Best Match button
+% performs RANSAC on best image found in Best Match Button
 % --- Executes on button press in pushbutton19.
 function pushbutton19_Callback(hObject, eventdata, handles)
 global current_scene;
+best = handles.best_test;
 scene_pgm = strcat('found_objects/',current_scene,'/',current_scene,'.pgm');
-image_pgm = strcat('input_images/objects/',type,'/image_',num2str(jj),'.pgm');
+image_pgm = best;
 [match_loc1, match_loc2] = new_match(scene_pgm,image_pgm,0);
-printer = ['Performing RANSAC on ',strcat(type,'/image_',num2str(jj),'.pgm')];
+printer = ['Performing RANSAC on ',best];
 disp(printer);
 [H, corrPtIdx] = findHomography(match_loc2',match_loc1');
 [match_loc1,match_loc2,num] = ransac_match(scene_pgm,image_pgm,corrPtIdx,1);

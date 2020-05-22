@@ -372,7 +372,7 @@ best_match_loc1 = 0;
 best_match_loc2 = 0;
 new_db = cell(1,20);
 firstFlag = 1;
-for ii = 15:15%:length(handles.object_list)
+for ii = 2:2%:length(handles.object_list)
     type = char(handles.object_list(ii));
     disp('--------------------------------------');
     printer = ['Searching for ',type];
@@ -417,23 +417,9 @@ for ii = 15:15%:length(handles.object_list)
         imagesc(app); axis(handles.axes1, 'equal','tight','off')
         firstFlag = 0;
         
-        [tform, inlierImagePoints, inlierScenePoints] = ...
+        [tform, ~, ~] = ...
         estimateGeometricTransform(best_match_loc2, best_match_loc1, 'affine');
-        %figure;
-        %showMatchedFeatures(image, scene, inlierImagePoints, ...
-        %inlierScenePoints, 'montage');
-        %title('Matched Points (Inliers Only)');
-        %imgout = imwarp(image,tform);
-        %imshow(imgout);
-        
-        %figure
-        %canny = edge(image,'canny',0.6);
-        %subplot(2,1,1);
-        %imshow(canny);
-        %imgout = imwarp(canny,tform);
-        %subplot(2,1,2);
-        %imshow(imgout);
-        imgout = warp_it(best_homo,best,scene_pgm,tform); 
+        imgout = warp_it(best_homo,best,scene,tform); 
         [rows, cols, ~] = size(imgout);
         [rows2, cols2, ~] = size(scene);
         if (rows*cols <= rows2*cols2)  
@@ -474,7 +460,6 @@ img21 = imwarp(image,tform); % reproject img2  % can use this or the below
 
 canny = edge(image,'canny',0.6);
 img21 = imwarp(canny,tform);
-
 [M1 N1 dim] = size(scene_pgm);
 [M2 N2 ~] = size(image_pgm);
 % do the mosaic
@@ -502,9 +487,10 @@ imgout(up:up+M3-1,left:left+N3-1,:) = img21;
 	% img1 is above img21
 imgout(Yoffset+1:Yoffset+M1,Xoffset+1:Xoffset+N1,:) = scene_pgm;
 
-%figure
+imgout(Yoffset+1:Yoffset+M1,Xoffset+1:Xoffset+N1,:) = 0;
+imgout(up:up+M3-1,left:left+N3-1,:) = img21;
+imgout = imresize(imgout,[M1 N1]);
 %imshow(imgout);
-
 %%
 function dilate_them(imgout,handles)
 
@@ -535,6 +521,7 @@ for column = 1 : width
     end
 end
 imshow(RGB);
+
 
 function draw_new_lines(scene,app,app2,new_db,matches)
 colour_list = ['b','g','r','c','m','y','k','w','Brown','PaleYellow','Gray','Orange'];
