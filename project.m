@@ -54,7 +54,7 @@ function project_OpeningFcn(hObject, eventdata, handles, varargin)
 
 % Choose default command line output for project
 handles.output = hObject;
-object_list = {'battery','calculator','canned_beans','cologne','deodorant','drink_holder','eraser','highlighter','lip_balm','minion','pallet','phone','sauce_jar','shoe','snack_bar','sunglasses','ue_boom','vitamins','wallet_1','wallet_2'};
+object_list = {'battery','calculator','canned_beans','cologne','deodorant','dice','drink_holder','eraser','minion','opener','pallet','phone','sauce_jar','shoe','snack_bar','sunglasses','ue_boom','vitamins','wallet_1','wallet_2'};
 handles.object_list = object_list;
 % Update handles structure
 guidata(hObject, handles);
@@ -259,7 +259,7 @@ for jj = 1:20 % Object list index
         if (size(image,3) == 3) % If image is RGB, convert to gray
             image = rgb2gray(image);
         end
-        bw_image = imbinarize(image,0.6);
+        bw_image = imbinarize(image,0.5);
         se = strel('disk',4);
         after_erosion = imerode(~bw_image,se);
         se = strel('disk',4);
@@ -372,12 +372,12 @@ best_match_loc1 = 0;
 best_match_loc2 = 0;
 new_db = cell(1,20);
 firstFlag = 1;
-for ii = 1:6%:length(handles.object_list)
+for ii = 10:20%:length(handles.object_list)
     type = char(handles.object_list(ii));
     disp('--------------------------------------');
     printer = ['Searching for ',type];
     disp(printer);
-    for jj = 1:1
+    for jj = 1:6
         image_pgm = strcat('input_images/objects/',type,'/image_',num2str(jj),'.pgm');
         try
             disp('---- GETTING MATCHES ----');
@@ -389,7 +389,7 @@ for ii = 1:6%:length(handles.object_list)
             [match_loc1,match_loc2,num] = ransac_match(scene_pgm,image_pgm,corrPtIdx,0);
             temp = num;
             if temp > max 
-                if (temp > 3) % need at least 6 matches 
+                if (temp > 7) % need at least 7 matches 
                     max = temp;
                     best = image_pgm;
                     best_homo = H;
@@ -531,15 +531,16 @@ imagesc(app);
 rows1 = 0;
 cols1 = size(scene,2);
 rows2 = size(scene,1);
-%%% NEED TO DO A MATRIX TRANSFORM FOR EACH ADDITIONAL MATCH TO MOVE LINES
-%%% ACCORDINGLY
+
 for kk = 1:matches
     best_match_loc1 = new_db{kk}(:,1:2); % scene matches
     best_match_loc2 = new_db{kk}(:,3:4); % object matches
+    
     if (((matches == 1) ||(matches == 2)) && ((kk == 2) || (kk == 1)))
         best_match_loc2 = best_match_loc2;
     else
         best_match_loc2 = best_match_loc2/(matches);
+
     end
     if (matches == 1)
         rows1 = 0;
