@@ -384,26 +384,27 @@ best_match_loc2 = 0;
 dilated = 0;
 scene = imread(scene_pgm);
 new_db = cell(1,20);
+scale = cell(1,20);
 firstFlag = 1;
-for ii = 2:3%:length(handles.object_list)
+for ii = 2:15%:length(handles.object_list)
     scene = imread(scene_pgm);
     type = char(handles.object_list(ii));
     disp('--------------------------------------');
     printer = ['Searching for ',type];
     disp(printer);
-    for jj = 2:3
+    for jj = 1:6
         image_pgm = strcat('input_images/objects/',type,'/image_',num2str(jj),'.pgm');
         try
             disp('---- GETTING MATCHES ----');
-            [match_loc1, match_loc2] = new_match(scene_pgm,image_pgm,0);
+            [match_loc1, match_loc2, match_results,des1,loc1,loc2] = new_match(scene_pgm,image_pgm,0);
             disp('---- RANSAC MATCHES ----');
             printer = ['Performing RANSAC on ',strcat(type,'/image_',num2str(jj),'.pgm')];
             disp(printer);
             [H, corrPtIdx] = findHomography(match_loc2',match_loc1');
-            [match_loc1,match_loc2,num] = ransac_match(scene_pgm,image_pgm,corrPtIdx,0);
+            [match_loc1,match_loc2,num] = ransac_match(scene_pgm,image_pgm,corrPtIdx,match_results,des1,loc1,loc2,0);
             temp = num;
             if temp > max 
-                if (temp > 6) % need at least 6 matches 
+                if (temp > 9) % need at least 9 matches 
                     max = temp;
                     best = image_pgm;
                     best_homo = H;
@@ -423,15 +424,15 @@ for ii = 2:3%:length(handles.object_list)
         new_db(matches) = {[best_match_loc1,best_match_loc2]};
  %%  UNCOMMENT THIS WHEN WORKING ON THE OUTLINE SECTION 
 
-% %         [tform, ~, ~] = estimateGeometricTransform(best_match_loc2, best_match_loc1, 'affine');
-% %         imgout = warp_it(best_homo,best,scene,tform); 
-% %         [rows, cols, ~] = size(imgout);
-% %         [rows2, cols2, ~] = size(scene);
-% %         if (rows*cols <= rows2*cols2)  
-% %             dilated = dilate_them(imgout,handles,dilated);
-% %         else
-% %             disp('ERROR TRANSFORMING');
-% %         end
+%         [tform, ~, ~] = estimateGeometricTransform(best_match_loc2, best_match_loc1, 'affine');
+%         imgout = warp_it(best_homo,best,scene,tform); 
+%         [rows, cols, ~] = size(imgout);
+%         [rows2, cols2, ~] = size(scene);
+%         if (rows*cols <= rows2*cols2)  
+%             dilated = dilate_them(imgout,handles,dilated);
+%         else
+%             disp('ERROR TRANSFORMING');
+%         end
  %%
     end 
     if (matches == 1 && firstFlag)
@@ -441,6 +442,8 @@ for ii = 2:3%:length(handles.object_list)
         scene = handles.image_file_rgb;
         app = appendimages(scene,image);
         app2 = image;
+        scale(1) = {[1,1]};
+        imwrite(app2,strcat('found_objects/',current_scene,'/append_',num2str(matches),'.pgm'),'pgm');
         imagesc(app); axis(handles.axes1, 'equal','tight','off')
         firstFlag = 0;
     elseif (matches > 1)
@@ -448,20 +451,21 @@ for ii = 2:3%:length(handles.object_list)
             %im_2 = imread(best);
             im_2 = imread(strcat('input_images/objects/',type,'/',best(end-4),'.jpg'));
             scene = handles.image_file_rgb;
-            app2 = appendimages2(app2,im_2,scene,matches); % apends images downwards
+            [app2,scale] = appendimages2(app2,im_2,scene,matches,scale); % appends images downwards
+            imwrite(app2,strcat('found_objects/',current_scene,'/append_',num2str(matches),'.pgm'),'pgm');
             app = appendimages(scene,app2);
             imagesc(app); axis(handles.axes1, 'equal','tight','off')
         catch
             continue
         end
     end
-      if (matches > 0)
-           try
-               draw_new_lines(scene,app,app2,new_db,matches)
-           catch
-               continue
-           end
-       end
+    if (matches > 0)
+       %try
+       draw_new_lines(scene_pgm,app,app2,new_db,matches,scale)
+       %catch
+       %    continue
+       %end
+    end
 
 best = 0;
 max = 0;
@@ -536,23 +540,86 @@ imshow(RGB);
 dilated = RGB;
 
 
-function draw_new_lines(scene,app,app2,new_db,matches)
+function draw_new_lines(scene,app,app2,new_db,matches,scale)
+global current_scene;
 colour_list = ['b','g','r','c','m','y','k','w','Brown','PaleYellow','Gray','Orange'];
 imagesc(app);
-%hold on;
+
+scene_path = strcat('found_objects/',current_scene,'/',current_scene,'.pgm');
+scene = imread(scene_path);
+
 rows1 = 0;
 cols1 = size(scene,2);
 rows2 = size(scene,1);
 
+% app2_path = strcat('found_objects/',current_scene,'/append_',num2str(matches),'.pgm');
+% app2 = imread(app2_path);
+
+%cols3 = size(app2,2);
+%rows3 = size(app2,1);
+
+%segment = imcrop(app2,[0,0,300,300]);
+%new_match(scene_path,app2_path,1);
+
+% [match_loc1, match_loc2] = new_match(scene_path,app2_path,0);
+% [H, corrPtIdx] = findHomography(match_loc2',match_loc1');
+% [match_loc1,match_loc2,num] = ransac_match(scene_path,app2_path,corrPtIdx,0);
+
+% for kk = 1:matches
+%     app2_path = strcat('found_objects/',current_scene,'/append_',num2str(matches),'.pgm');
+%     app2 = imread(app2_path);
+%     if (matches > 1)
+%         cols3 = size(app2,2);
+%         rows3 = size(app2,1);
+%         %segment = imcrop(app2,[0,0+(kk-1)*rows3,cols3,matches*(rows3/2)]);
+%         segment = imcrop(app2,[0, 0+(kk-1)*(rows3/matches), cols3, rows3/matches]);
+%         new_app2 = zeros(cols3,rows3);
+%         imshow(new_app2);
+%         new_app2(1,1+(kk-1)*(rows3/matches),:) = segment;
+%         
+%         imshow(new_app2)
+% 
+% 
+%         
+%         %imwrite(segment,strcat('found_objects/',current_scene,'/segment_',num2str(matches),'.pgm'),'pgm');
+%     end
+%     [match_loc1, match_loc2] = new_match(scene_path,app2_path,0);
+%     [~, corrPtIdx] = findHomography(match_loc2',match_loc1');
+%     [match_loc1,match_loc2,~] = ransac_match(scene_path,app2_path,corrPtIdx,0);
+%     
+%     for i = 1: size(match_loc1,1)
+%         line([match_loc1(i,1) match_loc2(i,1)+cols1], ...
+%              [match_loc1(i,2) match_loc2(i,2)], 'Color', colour_list(kk));
+%     end
+% end
+
 for kk = 1:matches
     best_match_loc1 = new_db{kk}(:,1:2); % scene matches
     best_match_loc2 = new_db{kk}(:,3:4); % object matches
+    scale_value_x = scale{kk}(:,1);
+    scale_value_y = scale{kk}(:,2);
+    
+    disp(scale_value_x);
+    disp(scale_value_y);
+    if (scale_value_x < scale{1}(:,1))   
+        best_match_loc2(:,1) = best_match_loc2(:,1)/scale_value_x;
+    else
+        best_match_loc2(:,1) = best_match_loc2(:,1)*scale_value_x;
+    end
+    if (scale_value_y < scale{1}(:,2)) 
+        best_match_loc2(:,2) = best_match_loc2(:,2)/scale_value_y;
+    else
+        best_match_loc2(:,2) = best_match_loc2(:,2)*scale_value_y;
+    end
     
     if (((matches == 1) ||(matches == 2)) && ((kk == 2) || (kk == 1)))
         best_match_loc2 = best_match_loc2;
     else
-        best_match_loc2 = best_match_loc2/(matches);
-
+        %best_match_loc2 = best_match_loc2/(matches);
+        best_match_loc2(:,2) = best_match_loc2(:,2)/(matches-1.5);
+       % best_match_loc2(2,:) = best_match_loc2(2,:);
+        
+        
     end
     if (matches == 1)
         rows1 = 0;
@@ -576,12 +643,12 @@ global current_scene;
 best = handles.best_test;
 scene_pgm = strcat('found_objects/',current_scene,'/',current_scene,'.pgm');
 image_pgm = best;
-[match_loc1, match_loc2] = new_match(scene_pgm,image_pgm,0);
+[match_loc1, match_loc2, match_results,des1,loc1,loc2] = new_match(scene_pgm,image_pgm,0);
 printer = ['Performing RANSAC on ',best];
 disp(printer);
 [H, corrPtIdx] = findHomography(match_loc2',match_loc1');
-[match_loc1,match_loc2,num] = ransac_match(scene_pgm,image_pgm,corrPtIdx,1);
-
+[match_loc1,match_loc2,num] = ransac_match(scene_pgm,image_pgm,corrPtIdx,match_results,des1,loc1,loc2,1);
+           
  %% IGNORE THIS          
         %[tform, ~, ~] = estimateGeometricTransform(best_match_loc2(1:4,:), best_match_loc1(1:4,:), 'projective');
         %[tform, ~, ~] = estimateGeometricTransform(best_match_loc2, best_match_loc1, 'affine');

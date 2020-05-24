@@ -8,7 +8,7 @@
 %
 % Example: match('scene.pgm','book.pgm');
 
-function [match_loc1,match_loc2] = match(image1, image2,display)
+function [match_loc1,match_loc2,matches,des1,loc1,loc2] = match(image1, image2,display)
 
 % Find SIFT keypoints for each image
 [im1, des1, loc1] = sift(image1);
@@ -66,5 +66,6 @@ y1 = loc1(idx1,1);
 y2 = loc2(idx2,1);
 match_loc1 = [x1,y1];
 match_loc2 = [x2,y2];
+matches = match;
 
 
