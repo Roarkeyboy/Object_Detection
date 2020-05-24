@@ -12,8 +12,7 @@ rows2 = size(image2,1);
 cols2 = size(image2,2);
 %rows2 = rows1/2;
 
-image2 = imresize(image2, [rows2, cols2]);
-rows2 = size(image2,1);
+%image2 = imresize(image2, [rows1, cols1/2]);
 
 if (rows1 < rows2)
      image1(rows2,1) = 0;

@@ -226,15 +226,22 @@ end
 % --- Executes on button press in pushbutton10.
 function pushbutton10_Callback(hObject, eventdata, handles)
 global current_scene;
-scene1 = imread('found_objects/scene_1/scene_1.pgm');
-image1 = imread('found_objects/scene_1/image_1.pgm');
-image2 = imread('found_objects/scene_1/image_2.pgm');
-image3 = imread('found_objects/scene_1/image_3.pgm');
-image4 = imread('found_objects/scene_1/image_4.pgm');
+scene1 = handles.image_file_rgb;
+
+image1 = imread('input_images/objects/battery/1.jpg');
+image2 = imread('input_images/objects/battery/2.jpg');
+
+
+% scene1 = imread(strcat('found_objects/',current_scene,'/',current_scene,'.pgm');
+% image1 = imread('found_objects/scene_1/image_1.pgm');
+% image2 = imread('found_objects/scene_1/image_2.pgm');
+% image3 = imread('found_objects/scene_1/image_3.pgm');
+% image4 = imread('found_objects/scene_1/image_4.pgm');
 app = appendimages(scene1,image1);
 app2 = image1;
 for ii = 2:4
-    im = imread(strcat('found_objects/scene_1/image_',num2str(ii),'.pgm')); % make this read the detected image
+    %im = imread(strcat('found_objects/scene_1/image_',num2str(ii),'.pgm')); % make this read the detected image
+    im = imread(strcat('input_images/objects/battery/',num2str(ii),'.jpg'));
     app2 = appendimages2(app2,im,scene1,ii); % apends images downwards
     app = appendimages(scene1,app2);
     imagesc(app); axis(handles.axes1, 'equal','tight','off')
@@ -242,7 +249,7 @@ end
 
 colormap(gray)
 
-%% Read Folder and Covert to PGM button
+%% Read Folder and Crop, Covert to PGM button
 % Used this to iterate over folders of images and convert them to PGM
 % --- Executes on button press in pushbutton11.
 function pushbutton11_Callback(hObject, eventdata, handles)
@@ -251,11 +258,12 @@ for jj = 1:20 % Object list index
     type = char(handles.object_list(jj));
     d = strcat('input_images/objects/',type);
     files = dir(fullfile(d,'*.jpg'));
-    figure()
+    %figure()
     for kk = 1:numel(files)
         file_name = fullfile(d,files(kk).name);
         image = imread(file_name);
         image = imresize(image,0.25);
+        image_rgb = image;
         if (size(image,3) == 3) % If image is RGB, convert to gray
             image = rgb2gray(image);
         end
@@ -270,14 +278,17 @@ for jj = 1:20 % Object list index
         max = 0;
         for ii = 1:total
             coord = bounding_boxes(ii).BoundingBox;
-            cropped_image = imcrop(image, [coord(1), coord(2), coord(3), coord(4)]);
+            cropped_image = imcrop(image_rgb, [coord(1), coord(2), coord(3), coord(4)]);
             temp = cropped_image;
-            if (size(temp) > size(max))
+            [r, c, ~] = size(temp);
+            [r2, c2, ~] = size(max);
+            if (r * c > r2 * c2)
                 max = temp;
             end
         end
-        subplot(2,3,kk);
-        imshow(max);
+        %subplot(2,3,kk);
+        %imshow(max);
+        imwrite(max,strcat('input_images/objects/',type,'/',num2str(kk),'.jpg'),'jpg');
         imwrite(max,strcat('input_images/objects/',type,'/image_',num2str(kk),'.pgm'),'pgm');
     end
 end
@@ -357,7 +368,7 @@ end
 subplot(2,2,3);
 imshow(RGB);
 
-%% https://au.mathworks.com/matlabcentral/fileexchange/30849-image-mosaic-using-sift
+
 % --- Executes on button press in pushbutton18.
 function pushbutton18_Callback(hObject, eventdata, handles)
 
@@ -374,12 +385,13 @@ dilated = 0;
 scene = imread(scene_pgm);
 new_db = cell(1,20);
 firstFlag = 1;
-for ii = 1:20%:length(handles.object_list)
+for ii = 2:3%:length(handles.object_list)
+    scene = imread(scene_pgm);
     type = char(handles.object_list(ii));
     disp('--------------------------------------');
     printer = ['Searching for ',type];
     disp(printer);
-    for jj = 1:6
+    for jj = 2:3
         image_pgm = strcat('input_images/objects/',type,'/image_',num2str(jj),'.pgm');
         try
             disp('---- GETTING MATCHES ----');
@@ -391,7 +403,7 @@ for ii = 1:20%:length(handles.object_list)
             [match_loc1,match_loc2,num] = ransac_match(scene_pgm,image_pgm,corrPtIdx,0);
             temp = num;
             if temp > max 
-                if (temp > 6) % need at least 7 matches 
+                if (temp > 6) % need at least 6 matches 
                     max = temp;
                     best = image_pgm;
                     best_homo = H;
@@ -409,29 +421,33 @@ for ii = 1:20%:length(handles.object_list)
     else 
         matches = matches + 1;
         new_db(matches) = {[best_match_loc1,best_match_loc2]};
- %%  UNCOMMENT THIS WHEN WORKING ON THE OUTLINE SECTION
-%         [tform, ~, ~] = estimateGeometricTransform(best_match_loc2, best_match_loc1, 'affine');
-%         %estimateGeometricTransform(best_match_loc2(3:7,:), best_match_loc1(3:7,:), 'affine');
-%         
-%         imgout = warp_it(best_homo,best,scene,tform); 
-%         [rows, cols, ~] = size(imgout);
-%         [rows2, cols2, ~] = size(scene);
-%         if (rows*cols <= rows2*cols2)  
-%             dilated = dilate_them(imgout,handles,dilated);
-%         else
-%             disp('ERROR TRANSFORMING');
-%         end
+ %%  UNCOMMENT THIS WHEN WORKING ON THE OUTLINE SECTION 
+
+% %         [tform, ~, ~] = estimateGeometricTransform(best_match_loc2, best_match_loc1, 'affine');
+% %         imgout = warp_it(best_homo,best,scene,tform); 
+% %         [rows, cols, ~] = size(imgout);
+% %         [rows2, cols2, ~] = size(scene);
+% %         if (rows*cols <= rows2*cols2)  
+% %             dilated = dilate_them(imgout,handles,dilated);
+% %         else
+% %             disp('ERROR TRANSFORMING');
+% %         end
  %%
     end 
     if (matches == 1 && firstFlag)
-        image = imread(best);
+        %best(end-4)
+        %image = imread(best);
+        image = imread(strcat('input_images/objects/',type,'/',best(end-4),'.jpg'));
+        scene = handles.image_file_rgb;
         app = appendimages(scene,image);
         app2 = image;
         imagesc(app); axis(handles.axes1, 'equal','tight','off')
         firstFlag = 0;
     elseif (matches > 1)
         try
-            im_2 = imread(best);
+            %im_2 = imread(best);
+            im_2 = imread(strcat('input_images/objects/',type,'/',best(end-4),'.jpg'));
+            scene = handles.image_file_rgb;
             app2 = appendimages2(app2,im_2,scene,matches); % apends images downwards
             app = appendimages(scene,app2);
             imagesc(app); axis(handles.axes1, 'equal','tight','off')
@@ -439,31 +455,31 @@ for ii = 1:20%:length(handles.object_list)
             continue
         end
     end
-     if (matches > 0)
-          try
-              draw_new_lines(scene,app,app2,new_db,matches)
-          catch
-              continue
-          end
-      end
+      if (matches > 0)
+           try
+               draw_new_lines(scene,app,app2,new_db,matches)
+           catch
+               continue
+           end
+       end
 
 best = 0;
 max = 0;
 end
 %%
+%% https://au.mathworks.com/matlabcentral/fileexchange/30849-image-mosaic-using-sift
 function imgout = warp_it(H,best,scene_pgm,tform)
-%%tform = projective2d(H'); % can use this or the below
-%tform = maketform('projective',H');
 
 image_pgm = best;
 image = imread(image_pgm);
-img21 = imwarp(image,tform); % reproject img2  % can use this or the below
-%img21 = imtransform(image,tform); % reproject img2
+
+%img21 = imwarp(image,tform); % reproject img2
 
 canny = edge(image,'canny',0.5);
 img21 = imwarp(canny,tform);
+
 [M1 N1 dim] = size(scene_pgm);
-[M2 N2 ~] = size(image_pgm);
+[M2 N2 ~] = size(image);
 % do the mosaic
 pt = zeros(3,4);
 pt(:,1) = H*[1;1;1];
@@ -492,10 +508,9 @@ imgout(up:up+M3-1,left:left+N3-1,:) = img21;
 imgout(Yoffset+1:Yoffset+M1,Xoffset+1:Xoffset+N1,:) = 0;
 imgout(up:up+M3-1,left:left+N3-1,:) = img21;
 imgout = imresize(imgout,[M1 N1]);
-%imshow(imgout);
+
 %%
 function dilated = dilate_them(imgout,handles,dilated)
-
 image = imgout;
 if (dilated == 0)
     rgb_image = handles.image_file_rgb;
@@ -566,4 +581,31 @@ printer = ['Performing RANSAC on ',best];
 disp(printer);
 [H, corrPtIdx] = findHomography(match_loc2',match_loc1');
 [match_loc1,match_loc2,num] = ransac_match(scene_pgm,image_pgm,corrPtIdx,1);
-           
+
+ %% IGNORE THIS          
+        %[tform, ~, ~] = estimateGeometricTransform(best_match_loc2(1:4,:), best_match_loc1(1:4,:), 'projective');
+        %[tform, ~, ~] = estimateGeometricTransform(best_match_loc2, best_match_loc1, 'affine');
+        
+       
+%         figure()  
+%         subplot(1,2,1);
+%         imshow(handles.image_file);
+%         hold on
+%         plot(best_match_loc1(:,1), best_match_loc1(:,2),'r*');
+%         hold off
+%         
+%         subplot(1,2,2);
+%         imshow('input_images/objects/calculator/image_1.pgm');
+%         hold on
+%         plot(best_match_loc2(:,1), best_match_loc2(:,2),'g*');
+%         hold off
+        
+
+        %%[x,y] = transformPointsForward(tform,best_match_loc2, best_match_loc1);
+        
+%         U = transformPointsForward(tform,best_match_loc2);
+%         figure()  
+%         imshow(handles.image_file);
+%         hold on
+%         plot(U(:,1),U(:,2),'b*');
+%         hold off
