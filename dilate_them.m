@@ -19,6 +19,6 @@ for column = 1 : width
         end
     end
 end
-imshow(RGB);
+%imshow(RGB);
 
 dilated = RGB;

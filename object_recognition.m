@@ -22,7 +22,7 @@ function varargout = object_recognition(varargin)
 
 % Edit the above text to modify the response to help object_recognition
 
-% Last Modified by GUIDE v2.5 25-May-2020 08:06:14
+% Last Modified by GUIDE v2.5 25-May-2020 11:47:48
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -114,8 +114,11 @@ dilated = 0;
 scene = imread(scene_pgm);
 new_db = cell(1,20);
 scale = cell(1,20);
+text_string = cell(1,20);
 firstFlag = 1;
-for ii = 1:20%:length(handles.object_list)
+handles.text3.String = ('SEARCHING');
+set(handles.text3,'BackgroundColor','red');
+for ii = 2:5%:length(handles.object_list)    
     scene = imread(scene_pgm);
     type = char(handles.object_list(ii));
     disp('--------------------------------------');
@@ -157,6 +160,10 @@ for ii = 1:20%:length(handles.object_list)
     else 
         matches = matches + 1;
         new_db(matches) = {[best_match_loc1,best_match_loc2]};
+        
+        text_string{matches} = type;
+        handles.listbox1.String = text_string;
+
  %%  UNCOMMENT THIS WHEN WORKING ON THE OUTLINE SECTION 
 
         [tform, ~, ~] = estimateGeometricTransform(best_match_loc2, best_match_loc1, 'affine');
@@ -174,10 +181,12 @@ for ii = 1:20%:length(handles.object_list)
         image = imread(strcat('input_images/objects/',type,'/',best(end-4),'.jpg'));
         scene = handles.image_file_rgb;
         app = appendimages(scene,image);
+        outlined_app = appendimages(dilated,image);
         app2 = image;
         scale(1) = {[1,1]};
         imwrite(app2,strcat('found_objects/',current_scene,'/append_',num2str(matches),'.pgm'),'pgm');
         %imagesc(app); axis(handles.axes1, 'equal','tight','off')
+        imagesc(outlined_app); axis(handles.axes1, 'equal','tight','off')
         firstFlag = 0;
     elseif (matches > 1)
         try
@@ -186,24 +195,24 @@ for ii = 1:20%:length(handles.object_list)
             [app2,scale] = appendimages2(app2,im_2,scene,matches,scale); % appends images downwards
             imwrite(app2,strcat('found_objects/',current_scene,'/append_',num2str(matches),'.pgm'),'pgm');
             app = appendimages(scene,app2);
+            outlined_app = appendimages(dilated,app2);
             %imagesc(app); axis(handles.axes1, 'equal','tight','off')
+            imagesc(outlined_app); axis(handles.axes1, 'equal','tight','off')
         catch
             continue
         end
+    end   
+    if (matches > 0)
+       draw_new_lines(scene_pgm,outlined_app,app2,new_db,matches,scale,hObject,handles)
     end
-%     
-%     if (matches > 0)
-%        %try
-%        draw_new_lines(scene_pgm,app,app2,new_db,matches,scale,handles)
-%        %catch
-%        %    continue
-%        %end
-%     end
-
-best = 0;
-max = 0;
+    handles.not_outlined = app;
+    handles.outlined = outlined_app;
+    guidata(hObject,handles);
+    best = 0;
+    max = 0;
 end
-
+set(handles.text3,'BackgroundColor','green');
+handles.text3.String = ('FINISHED SEARCHING');
 % --- Executes on button press in checkbox1.
 function checkbox1_Callback(hObject, eventdata, handles)
 % hObject    handle to checkbox1 (see GCBO)
@@ -220,3 +229,52 @@ function checkbox2_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of checkbox2
+if(get(hObject,'Value') == 0)
+    imagesc(handles.not_outlined); axis(handles.axes1, 'equal','tight','off')
+else
+    imagesc(handles.outlined); axis(handles.axes1, 'equal','tight','off')
+end
+
+function edit1_Callback(hObject, eventdata, handles)
+% hObject    handle to edit1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit1 as text
+%        str2double(get(hObject,'String')) returns contents of edit1 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit1_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in listbox1.
+function listbox1_Callback(hObject, eventdata, handles)
+% hObject    handle to listbox1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns listbox1 contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from listbox1
+
+
+% --- Executes during object creation, after setting all properties.
+function listbox1_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to listbox1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: listbox controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end

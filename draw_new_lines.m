@@ -1,8 +1,8 @@
-function draw_new_lines(scene,app,app2,new_db,matches,scale)
+function draw_new_lines(scene,app,app2,new_db,matches,scale,hObject,handles)
 global current_scene;
 colour_list = ['b','g','r','c','m','y','k','w','Brown','PaleYellow','Gray','Orange'];
 
-imagesc(app);
+imagesc(app);axis(handles.axes1, 'equal','tight','off')
 
 scene_path = strcat('found_objects/',current_scene,'/',current_scene,'.pgm');
 scene = imread(scene_path);
