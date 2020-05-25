@@ -1,13 +1,3 @@
-% num = match(image1, image2)
-%
-% This function reads two images, finds their SIFT features, and
-%   displays lines connecting the matched keypoints.  A match is accepted
-%   only if its distance is less than distRatio times the distance to the
-%   second closest match.
-% It returns the number of matches displayed.
-%
-% Example: match('scene.pgm','book.pgm');
-
 function [match_loc1,match_loc2,num] = ransac_match(image1, image2,corrPtIdx,matches,des1,loc1,loc2,display)
 
 % Find SIFT keypoints for each image

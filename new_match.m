@@ -1,12 +1,7 @@
-% num = match(image1, image2)
-%
 % This function reads two images, finds their SIFT features, and
 %   displays lines connecting the matched keypoints.  A match is accepted
 %   only if its distance is less than distRatio times the distance to the
 %   second closest match.
-% It returns the number of matches displayed.
-%
-% Example: match('scene.pgm','book.pgm');
 
 function [match_loc1,match_loc2,matches,des1,loc1,loc2] = match(image1, image2,display)
 

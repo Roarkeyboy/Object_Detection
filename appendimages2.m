@@ -18,10 +18,5 @@ else
     image1 = imresize(image1,[(matches-1)*rows3/matches, cols1]);
     image2 = imresize(image2,[rows3/matches, cols1]);
 end
-%image1 = imresize(image1,[(matches-1)*rows3/matches, cols1]);
 
-%image2 = imresize(image2,[rows3/matches, cols1]);
-
-
-% Now append both images.
 im = [image1; image2];     

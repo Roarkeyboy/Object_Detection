@@ -1,7 +1,28 @@
 function draw_new_lines(scene,app,app2,new_db,matches,scale,hObject,handles)
 global current_scene;
-%colour_list = ['b','g','r','c','m','y','k','w','Brown','PaleYellow','Gray','Orange'];
-colour_list = handles.colour_list;
+colour_list = ['b','g','r','c','m','y','k','w','Brown','PaleYellow','Gray','Orange'];
+colour_list = ['Black','Blue'
+BlueViolet
+Brown
+Cyan
+DarkBlue
+DarkGreen
+DarkMagenta
+DarkSalmon
+DarkYellow
+Gray
+Green
+LightBlue
+LightSeaGreen
+Magenta
+Orange
+PaleYellow
+Purple
+Red
+SmahtGuide
+White
+Yellow
+
 imagesc(app);axis(handles.axes1, 'equal','tight','off')
 
 scene_path = strcat('found_objects/',current_scene,'/',current_scene,'.pgm');
@@ -16,22 +37,20 @@ for kk = 1:matches
     best_match_loc2 = new_db{kk}(:,3:4); % object matches
     scale_value_x = scale{kk}(:,1);
     scale_value_y = scale{kk}(:,2);
-    if (kk > 1)
-        if (scale_value_x < scale{1}(:,1))   
-            best_match_loc2(:,1) = best_match_loc2(:,1)*scale_value_x;
-        else
-            best_match_loc2(:,1) = best_match_loc2(:,1)/scale_value_x;
-        end
-        if (scale_value_y < scale{1}(:,2)) 
-            best_match_loc2(:,2) = best_match_loc2(:,2)*scale_value_y;
-        else
-            best_match_loc2(:,2) = best_match_loc2(:,2)/scale_value_y;
-        end
+    if (scale_value_x < scale{1}(:,1))   
+        best_match_loc2(:,1) = best_match_loc2(:,1)/scale_value_x;
+    else
+        best_match_loc2(:,1) = best_match_loc2(:,1)*scale_value_x;
+    end
+    if (scale_value_y < scale{1}(:,2)) 
+        best_match_loc2(:,2) = best_match_loc2(:,2)/scale_value_y;
+    else
+        best_match_loc2(:,2) = best_match_loc2(:,2)*scale_value_y;
     end
     
     if (((matches == 1) ||(matches == 2)) && ((kk == 2) || (kk == 1)))
         best_match_loc2 = best_match_loc2;
-        %best_match_loc2(:,2) = best_match_loc2(:,2)/(matches);
+        best_match_loc2(:,2) = best_match_loc2(:,2)/(matches);
     else
         %best_match_loc2 = best_match_loc2/(matches);
         best_match_loc2(:,2) = best_match_loc2(:,2)/(matches-1.5);
@@ -48,7 +67,7 @@ for kk = 1:matches
     end
     for i = 1: size(best_match_loc1,1)
         line([best_match_loc1(i,1) best_match_loc2(i,1)+cols1], ...
-             [best_match_loc1(i,2) best_match_loc2(i,2)+rows1], 'Color', colour_list{kk}(:)/255);
+             [best_match_loc1(i,2) best_match_loc2(i,2)+rows1], 'Color', colour_list(kk));
     end
 end
 %hold off;

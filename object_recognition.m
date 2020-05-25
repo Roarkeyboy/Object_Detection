@@ -54,6 +54,10 @@ function object_recognition_OpeningFcn(hObject, eventdata, handles, varargin)
 
 % Choose default command line output for object_recognition
 handles.output = hObject;
+% Created colour list for dynamic colouring for objects
+colour_list = {[124,252,0],[255,0,0],[255,255,0],[139,0,0],[128,0,128],[0,0,0],[255,255,255],[0,255,0],[0,0,255],[0,255,255],[255,0,255],[192,192,192],[128,128,128],[128,128,0],[0,128,0],[0,128,128],[0,0,128],[128,0,0],[255,69,0],[255,215,0]};
+handles.colour_list = colour_list;
+% Created object list to index through
 object_list = {'battery','calculator','canned_beans','card_1','card_2','cd','deodorant','dice','drink_holder','forklift','minion','mints','opener','sauce_jar','shoe','snack_bar','strepsils','vitamins','wallet_1','wallet_2'};
 handles.object_list = object_list;
 % Update handles structure
@@ -118,7 +122,7 @@ text_string = cell(1,20);
 firstFlag = 1;
 handles.text3.String = ('SEARCHING');
 set(handles.text3,'BackgroundColor','red');
-for ii = 2:5%:length(handles.object_list)    
+for ii = 1:20%:length(handles.object_list)    
     scene = imread(scene_pgm);
     type = char(handles.object_list(ii));
     disp('--------------------------------------');
@@ -171,7 +175,7 @@ for ii = 2:5%:length(handles.object_list)
         [rows, cols, ~] = size(imgout);
         [rows2, cols2, ~] = size(scene);
         if (rows*cols <= rows2*cols2)  
-            dilated = dilate_them(imgout,handles,dilated);
+            dilated = dilate_them(imgout,handles,dilated,matches);
         else
             disp('ERROR TRANSFORMING');
         end
@@ -203,11 +207,20 @@ for ii = 2:5%:length(handles.object_list)
         end
     end   
     if (matches > 0)
-       draw_new_lines(scene_pgm,outlined_app,app2,new_db,matches,scale,hObject,handles)
+       draw_new_lines(scene_pgm,outlined_app,app2,new_db,matches,scale,hObject,handles);
     end
-    handles.not_outlined = app;
-    handles.outlined = outlined_app;
-    guidata(hObject,handles);
+    try
+        handles.not_outlined = app;
+        handles.outlined = outlined_app;
+        handles.scene_pgm = scene_pgm;
+        handles.app2 = app2;
+        handles.new_db = new_db;
+        handles.matches = matches;
+        handles.scale = scale;
+        guidata(hObject,handles);
+    catch
+        continue;
+    end    
     best = 0;
     max = 0;
 end
@@ -215,24 +228,43 @@ set(handles.text3,'BackgroundColor','green');
 handles.text3.String = ('FINISHED SEARCHING');
 % --- Executes on button press in checkbox1.
 function checkbox1_Callback(hObject, eventdata, handles)
-% hObject    handle to checkbox1 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of checkbox1
+outlined_app = handles.outlined;
+not_outlined = handles.not_outlined;
+scene_pgm = handles.scene_pgm;
+app2 = handles.app2;
+new_db = handles.new_db;
+matches = handles.matches;
+scale = handles.scale;
+if((get(handles.checkbox1,'Value') == 1) && (get(handles.checkbox2,'Value') == 1))
+    draw_new_lines(scene_pgm,outlined_app,app2,new_db,matches,scale,hObject,handles);
+elseif((get(handles.checkbox1,'Value') == 1) && (get(handles.checkbox2,'Value') == 0))
+    draw_new_lines(scene_pgm,not_outlined,app2,new_db,matches,scale,hObject,handles);
+elseif(get(handles.checkbox1,'Value') == 0) && (get(handles.checkbox2,'Value') == 0)
+    imagesc(handles.not_outlined); axis(handles.axes1, 'equal','tight','off')
+else
+    imagesc(handles.outlined); axis(handles.axes1, 'equal','tight','off')
+end
 
 
 % --- Executes on button press in checkbox2.
 function checkbox2_Callback(hObject, eventdata, handles)
-% hObject    handle to checkbox2 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
+outlined_app = handles.outlined;
+not_outlined = handles.not_outlined;
+scene_pgm = handles.scene_pgm;
+app2 = handles.app2;
+new_db = handles.new_db;
+matches = handles.matches;
+scale = handles.scale;
 
-% Hint: get(hObject,'Value') returns toggle state of checkbox2
-if(get(hObject,'Value') == 0)
+if(get(handles.checkbox1,'Value') == 0) && (get(handles.checkbox2,'Value') == 0)
     imagesc(handles.not_outlined); axis(handles.axes1, 'equal','tight','off')
-else
+elseif(get(handles.checkbox1,'Value') == 0) && (get(handles.checkbox2,'Value') == 1)
     imagesc(handles.outlined); axis(handles.axes1, 'equal','tight','off')
+elseif(get(handles.checkbox1,'Value') == 1) && (get(handles.checkbox2,'Value') == 1)
+    draw_new_lines(scene_pgm,outlined_app,app2,new_db,matches,scale,hObject,handles);
+else
+    draw_new_lines(scene_pgm,not_outlined,app2,new_db,matches,scale,hObject,handles);
 end
 
 function edit1_Callback(hObject, eventdata, handles)

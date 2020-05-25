@@ -98,7 +98,12 @@ guidata(hObject,handles);
 % --- Executes on button press in pushbutton3.
 function pushbutton3_Callback(hObject, eventdata, handles)
 global current_scene
-[label,total] = bounding_box(handles);
+bw_image = imbinarize(handles.image_file,0.55);
+se = strel('disk',2);
+after_erosion = imerode(~bw_image,se);
+se = strel('disk',6);
+after_dilate = imdilate(after_erosion,se);
+[label,total] = bwlabel(after_dilate,8);
 bounding_boxes = regionprops(label,'BoundingBox');
 for ii = 1:total
     coord = bounding_boxes(ii).BoundingBox;
@@ -486,30 +491,3 @@ disp(printer);
 [H, corrPtIdx] = findHomography(match_loc2',match_loc1');
 [match_loc1,match_loc2,num] = ransac_match(scene_pgm,image_pgm,corrPtIdx,match_results,des1,loc1,loc2,1);
            
- %% IGNORE THIS          
-        %[tform, ~, ~] = estimateGeometricTransform(best_match_loc2(1:4,:), best_match_loc1(1:4,:), 'projective');
-        %[tform, ~, ~] = estimateGeometricTransform(best_match_loc2, best_match_loc1, 'affine');
-        
-       
-%         figure()  
-%         subplot(1,2,1);
-%         imshow(handles.image_file);
-%         hold on
-%         plot(best_match_loc1(:,1), best_match_loc1(:,2),'r*');
-%         hold off
-%         
-%         subplot(1,2,2);
-%         imshow('input_images/objects/calculator/image_1.pgm');
-%         hold on
-%         plot(best_match_loc2(:,1), best_match_loc2(:,2),'g*');
-%         hold off
-        
-
-        %%[x,y] = transformPointsForward(tform,best_match_loc2, best_match_loc1);
-        
-%         U = transformPointsForward(tform,best_match_loc2);
-%         figure()  
-%         imshow(handles.image_file);
-%         hold on
-%         plot(U(:,1),U(:,2),'b*');
-%         hold off
