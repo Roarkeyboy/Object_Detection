@@ -22,7 +22,7 @@ function varargout = object_recognition(varargin)
 
 % Edit the above text to modify the response to help object_recognition
 
-% Last Modified by GUIDE v2.5 25-May-2020 11:47:48
+% Last Modified by GUIDE v2.5 26-May-2020 11:06:10
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -60,6 +60,9 @@ handles.colour_list = colour_list;
 % Created object list to index through
 object_list = {'bandaids','battery','book','calculator','canned_beans','card_1','card_2','cd','deodorant','drink_holder','migoreng','minion','mints','pest_paper','shoe','snack_bar','strepsils','toothpaste','up_go','wallet_2'};
 handles.object_list = object_list;
+
+objects_in_images_list = {4,4,4,4,4,6,6,6,6,8};
+handles.objects_in_images_list  = objects_in_images_list;
 set(handles.axes1,'Visible','off'); % Start with left axis not visible
 % Update handles structure
 guidata(hObject, handles);
@@ -100,8 +103,12 @@ colormap(gray) % display grayscale
 %imwrite(image_file,strcat('input_images/scenes/',current_scene,'.pgm'),'pgm');
 handles.image_file = image_file;
 handles.image_file_rgb = image_file_rgb;
-guidata(hObject,handles);
 
+index = strcat(file_name(1+strfind(file_name,'_'):strfind(file_name,'.')-1),'');
+index = str2double(index);
+handles.index_file = index;
+handles.text6.String = ('N/A');
+guidata(hObject,handles);
 % --- Executes on button press in pushbutton2.
 function pushbutton2_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton2 (see GCBO)
@@ -109,8 +116,9 @@ function pushbutton2_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 global current_scene;
 scene_pgm = strcat('input_images/scenes/',current_scene,'.pgm');
-disp(current_scene);
-new_data = 0;
+index_file = handles.index_file;
+objects_in_images_list = handles.objects_in_images_list;
+new_data = handles.new_data;
 max = 0;
 matches = 0;
 best = 0;
@@ -124,10 +132,13 @@ text_string = cell(1,20);
 first_flag = 1;
 handles.text3.String = ('SEARCHING');
 set(handles.text3,'BackgroundColor','red');
-full_run(current_scene,handles,hObject,scene_pgm,new_data,max,matches,best,best_homo,best_match_loc1,best_match_loc2,dilated,new_db,scale,text_string,first_flag);
+total_matches = full_run(current_scene,handles,hObject,scene_pgm,new_data,max,matches,best,best_homo,best_match_loc1,best_match_loc2,dilated,new_db,scale,text_string,first_flag);
 
 set(handles.text3,'BackgroundColor','green');
 handles.text3.String = ('FINISHED SEARCHING');
+accuracy = 100*(total_matches/objects_in_images_list{index_file});
+handles.text6.String = strcat(num2str(accuracy),'%');
+
 % --- Executes on button press in checkbox1.
 function checkbox1_Callback(hObject, eventdata, handles)
 
@@ -212,3 +223,22 @@ function listbox1_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in checkbox3.
+function checkbox3_Callback(hObject, eventdata, handles)
+
+if(get(handles.checkbox3,'Value') == 1)
+    handles.new_data = 0;
+elseif(get(handles.checkbox3,'Value') == 0)
+    handles.new_data = 1;
+end
+guidata(hObject,handles);
+
+% --- Executes during object creation, after setting all properties.
+function checkbox3_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to checkbox3 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+handles.new_data = 0;
+guidata(hObject,handles);

@@ -163,7 +163,7 @@ end
 %% SAVE DESCRIPTORS AS MATLAB DATA (SAVE ALL SIFT DATA BUTTON)
 % --- Executes on button press in pushbutton8.
 function pushbutton8_Callback(hObject, eventdata, handles)
-for ii = 1:11
+for ii = 1:10
     scene_pgm = strcat('input_images/scenes/scene_',num2str(ii),'.pgm');
     [im1, des1, loc1] = sift(scene_pgm);
     save(strcat('input_images/scenes/scene_',num2str(ii),'.mat'),'im1', 'des1','loc1');
@@ -185,7 +185,7 @@ disp('All SIFT data saved!');
 % --- Executes on button press in pushbutton11.
 function pushbutton11_Callback(hObject, eventdata, handles)
 object_list = handles.object_list;
-for ii = 1:11
+for ii = 1:10
     scene_path = strcat('full_size_images/scenes/scene_',num2str(ii),'.jpg');
     image_file = imread(scene_path); % Read in image at given path
     disp(scene_path);

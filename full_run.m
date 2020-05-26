@@ -1,4 +1,4 @@
-function full_run(current_scene,handles,hObject,scene_pgm,new_data,max,matches,best,best_homo,best_match_loc1,best_match_loc2,dilated,new_db,scale,text_string,first_flag)
+function matches = full_run(current_scene,handles,hObject,scene_pgm,new_data,max,matches,best,best_homo,best_match_loc1,best_match_loc2,dilated,new_db,scale,text_string,first_flag)
 
 for ii = 1:length(handles.object_list)  
     guidata(hObject,handles);
