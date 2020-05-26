@@ -22,7 +22,7 @@ function varargout = GUI_testing(varargin)
 
 % Edit the above text to modify the response to help GUI_testing
 
-% Last Modified by GUIDE v2.5 26-May-2020 14:15:55
+% Last Modified by GUIDE v2.5 26-May-2020 14:08:16
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -351,13 +351,18 @@ function pushbutton20_Callback(hObject, eventdata, handles)
 global current_scene;
 scene_pgm = strcat('input_images/scenes/',current_scene,'.pgm');
 max = 0;
+temp = 0;
 matches = 0;
 best = 0;
 best_homo = 0;
 best_match_loc1 = 0;
 best_match_loc2 = 0;
 dilated = 0;
+scene = imread(scene_pgm);
 new_db = cell(1,20);
+scale = cell(1,20);
+firstFlag = 1;
+dont_draw_lines = 0;
 for ii = 6%:length(handles.object_list)
     scene = imread(scene_pgm);
     type = char(handles.object_list(ii));
@@ -402,11 +407,41 @@ for ii = 6%:length(handles.object_list)
         [rows2, cols2, ~] = size(scene);
         if (rows*cols <= rows2*cols2)  
             dilated = dilate_them(imgout,handles,dilated,matches);
-            imagesc(dilated); axis(handles.axes1, 'equal','tight','off')
         else
             disp('ERROR TRANSFORMING');
         end
     end 
+    if (matches == 1 && firstFlag)
+        image = imread(strcat('input_images/objects/',type,'/',best(end-4),'.jpg'));
+        scene = handles.image_file_rgb;
+        app = appendimages(scene,image);
+        app2 = image;
+        scale(1) = {[1,1]};
+        imwrite(app2,strcat('found_objects/',current_scene,'/append_',num2str(matches),'.pgm'),'pgm');
+        imagesc(app); axis(handles.axes1, 'equal','tight','off')
+        firstFlag = 0;
+    elseif (matches > 1)
+        try
+            im_2 = imread(strcat('input_images/objects/',type,'/',best(end-4),'.jpg'));
+            scene = handles.image_file_rgb;
+            [app2,scale] = appendimages2(app2,im_2,scene,matches,scale); % appends images downwards
+            imwrite(app2,strcat('found_objects/',current_scene,'/append_',num2str(matches),'.pgm'),'pgm');
+            app = appendimages(scene,app2);
+            imagesc(app); axis(handles.axes1, 'equal','tight','off')
+        catch
+            continue
+        end
+    end
+    
+    if (matches > 0)
+       draw_new_lines(scene_pgm,app,app2,new_db,matches,scale,hObject,handles)
+       axis(handles.axes1, 'equal','tight','off')
+       if (dont_draw_lines)
+            imagesc(app); axis(handles.axes1, 'equal','tight','off')
+       end
+    end
+
 best = 0;
 max = 0;
 end
+

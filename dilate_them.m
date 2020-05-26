@@ -1,5 +1,4 @@
 function dilated = dilate_them(imgout,handles,dilated,matches)
-%colour_list = ['b','g','r','c','m','y','k','w','Brown','PaleYellow','Gray','Orange'];
 colour_list = handles.colour_list;
 image = imgout;
 if (dilated == 0)
@@ -18,10 +17,7 @@ for column = 1 : width
             RGB(row, column,1) = colour_list{matches}(1);
             RGB(row, column,2) = colour_list{matches}(2);
             RGB(row, column,3) = colour_list{matches}(3);
-            %RGB(row, column) = colour_list(matches);
         end
     end
 end
-%imshow(RGB);
-
 dilated = RGB;
