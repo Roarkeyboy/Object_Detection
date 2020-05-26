@@ -132,21 +132,21 @@ end
 %% SAVE DESCRIPTORS AS MATLAB DATA (SAVE ALL SIFT DATA BUTTON)
 % --- Executes on button press in pushbutton8.
 function pushbutton8_Callback(hObject, eventdata, handles)
-for ii = 1:10
+for ii = 1:30
     scene_pgm = strcat('input_images/scenes/scene_',num2str(ii),'.pgm');
     [im1, des1, loc1] = sift(scene_pgm);
     save(strcat('input_images/scenes/scene_',num2str(ii),'.mat'),'im1', 'des1','loc1');
 end
-% for ii = 1:length(handles.object_list)    
-%     type = char(handles.object_list(ii));
-%     d = strcat('input_images/objects/',type,'/');
-%     files = dir(fullfile(d,'*.pgm'));
-%     for jj = 1:numel(files)
-%         image_pgm = strcat('input_images/objects/',type,'/image_',num2str(jj),'.pgm');
-%         [im2, des2, loc2] = sift(image_pgm);
-%         save(strcat('input_images/objects/',type,'/image_',num2str(jj),'.mat'), 'im2','des2','loc2');
-%     end
-% end
+for ii = 1:length(handles.object_list)    
+    type = char(handles.object_list(ii));
+    d = strcat('input_images/objects/',type,'/');
+    files = dir(fullfile(d,'*.pgm'));
+    for jj = 1:numel(files)
+        image_pgm = strcat('input_images/objects/',type,'/image_',num2str(jj),'.pgm');
+        [im2, des2, loc2] = sift(image_pgm);
+        save(strcat('input_images/objects/',type,'/image_',num2str(jj),'.mat'), 'im2','des2','loc2');
+    end
+end
 disp('All SIFT data saved!');
 
 %% Read Folder and Crop, Covert to PGM button
@@ -154,51 +154,57 @@ disp('All SIFT data saved!');
 % --- Executes on button press in pushbutton11.
 function pushbutton11_Callback(hObject, eventdata, handles)
 object_list = handles.object_list;
-for ii = 1:10
+for ii = 1:30
     scene_path = strcat('full_size_images/scenes/scene_',num2str(ii),'.jpg');
     image_file = imread(scene_path); % Read in image at given path
-    disp(scene_path);
     image_file = imresize(image_file,0.25);
     if (size(image_file,3) == 3) % If image is RGB, convert to gray
         image_file = rgb2gray(image_file);
     end
     imwrite(image_file,strcat('input_images/scenes/scene_',num2str(ii),'.pgm'),'pgm'); % save scene as Pgm
 end
-   
-% for jj = 1:length(object_list)  % Object list index
-%     type = char(object_list(jj));
-%     d = strcat('full_size_images/objects/',type);
-%     files = dir(fullfile(d,'*.jpg'));
-%     for kk = 1:numel(files)
-%         file_name = fullfile(d,files(kk).name);
-%         image = imread(file_name);
-%         image = imresize(image,0.25);
-%         image_rgb = image;
-%         if (size(image,3) == 3) % If image is RGB, convert to gray
-%             image = rgb2gray(image);
-%         end
-%         bw_image = imbinarize(image,0.5);
-%         se = strel('disk',4);
-%         after_erosion = imerode(~bw_image,se);
-%         se = strel('disk',4);
-%         after_dilate = imdilate(after_erosion,se);
-%         [label,total] = bwlabel(after_dilate,8);
-%         bounding_boxes = regionprops(label,'BoundingBox');
-%         max = 0;
-%         for ii = 1:total
-%             coord = bounding_boxes(ii).BoundingBox;
-%             cropped_image = imcrop(image_rgb, [coord(1), coord(2), coord(3), coord(4)]);
-%             temp = cropped_image;
-%             [r, c, ~] = size(temp);
-%             [r2, c2, ~] = size(max);
-%             if (r * c > r2 * c2)
-%                 max = temp;
-%             end
-%         end
-%         imwrite(max,strcat('input_images/objects/',type,'/',num2str(kk),'.jpg'),'jpg');
-%         imwrite(max,strcat('input_images/objects/',type,'/image_',num2str(kk),'.pgm'),'pgm');
-%     end
-% end
+for jj = 1:length(object_list)  % Object list index
+    type = char(object_list(jj));
+    d = strcat('full_size_images/objects/',type);
+    files = dir(fullfile(d,'*.jpg'));
+    for kk = 1:numel(files)
+        file_name = fullfile(d,files(kk).name);
+        image = imread(file_name);
+        image = imresize(image,0.25);
+        image_rgb = image;
+        if (size(image,3) == 3) % If image is RGB, convert to gray
+            image = rgb2gray(image);
+        end
+        bin_value = 0.5;
+        if((jj == 1) || (jj == 7) || (jj == 12))
+            bin_value = 0.35;
+        elseif(jj == 16)
+            bin_value = 0.55;
+        elseif(jj == 17)
+            bin_value = 0.46;
+        end
+        bw_image = imbinarize(image,bin_value);
+        se = strel('disk',4);
+        after_erosion = imerode(~bw_image,se);
+        se = strel('disk',4);
+        after_dilate = imdilate(after_erosion,se);
+        [label,total] = bwlabel(after_dilate,8);
+        bounding_boxes = regionprops(label,'BoundingBox');
+        max = 0;
+        for ii = 1:total
+            coord = bounding_boxes(ii).BoundingBox;
+            cropped_image = imcrop(image_rgb, [coord(1), coord(2), coord(3), coord(4)]);
+            temp = cropped_image;
+            [r, c, ~] = size(temp);
+            [r2, c2, ~] = size(max);
+            if (r * c > r2 * c2)
+                max = temp;
+            end        
+        end  
+        imwrite(max,strcat('input_images/objects/',type,'/',num2str(kk),'.jpg'),'jpg');
+        imwrite(max,strcat('input_images/objects/',type,'/image_',num2str(kk),'.pgm'),'pgm');
+    end
+end
 disp('All images converted to PGM!');
 
 %% Best Match Button
@@ -236,14 +242,12 @@ function pushbutton18_Callback(hObject, eventdata, handles)
 global current_scene;
 scene_pgm = strcat('input_images/scenes/',current_scene,'.pgm');
 max = 0;
-temp = 0;
 matches = 0;
 best = 0;
 best_homo = 0;
 best_match_loc1 = 0;
 best_match_loc2 = 0;
 dilated = 0;
-scene = imread(scene_pgm);
 new_db = cell(1,20);
 scale = cell(1,20);
 firstFlag = 1;
@@ -283,9 +287,7 @@ for ii = 6%:length(handles.object_list)
         disp(printer2);
     else 
         matches = matches + 1;
-        new_db(matches) = {[best_match_loc1,best_match_loc2]};
- %%  UNCOMMENT THIS WHEN WORKING ON THE OUTLINE SECTION 
-
+        new_db(matches) = {[best_match_loc1,best_match_loc2]}; 
         [tform, ~, ~] = estimateGeometricTransform(best_match_loc2, best_match_loc1, 'affine');
         imgout = warp_it(best_homo,best,scene,tform); 
         [rows, cols, ~] = size(imgout);

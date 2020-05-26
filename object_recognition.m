@@ -22,7 +22,7 @@ function varargout = object_recognition(varargin)
 
 % Edit the above text to modify the response to help object_recognition
 
-% Last Modified by GUIDE v2.5 26-May-2020 11:06:10
+% Last Modified by GUIDE v2.5 26-May-2020 15:18:46
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -61,7 +61,7 @@ handles.colour_list = colour_list;
 object_list = {'bandaids','battery','book','calculator','canned_beans','card_1','card_2','cd','deodorant','drink_holder','migoreng','minion','mints','pest_paper','shoe','snack_bar','strepsils','toothpaste','up_go','wallet_2'};
 handles.object_list = object_list;
 
-objects_in_images_list = {4,4,4,4,4,6,6,6,6,8};
+objects_in_images_list = {4,4,4,4,4,6,6,6,6,8,4,5,3,3,3,3,3,3,3,3,8,3,3,5,3,4,5,7,5,12};
 handles.objects_in_images_list  = objects_in_images_list;
 set(handles.axes1,'Visible','off'); % Start with left axis not visible
 % Update handles structure
@@ -132,6 +132,7 @@ text_string = cell(1,20);
 first_flag = 1;
 handles.text3.String = ('SEARCHING');
 set(handles.text3,'BackgroundColor','red');
+drawnow();
 total_matches = full_run(current_scene,handles,hObject,scene_pgm,new_data,max,matches,best,best_homo,best_match_loc1,best_match_loc2,dilated,new_db,scale,text_string,first_flag);
 
 set(handles.text3,'BackgroundColor','green');
