@@ -4,7 +4,7 @@ global current_scene;
 colour_list = handles.colour_list;
 imagesc(app);axis(handles.axes1, 'equal','tight','off')
 
-scene_path = strcat('found_objects/',current_scene,'/',current_scene,'.pgm');
+scene_path = strcat('input_images/scenes/',current_scene,'.pgm');
 scene = imread(scene_path);
 
 rows1 = 0;

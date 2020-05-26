@@ -42,7 +42,7 @@ if (display)
     im3 = appendimages(im1,im2);
 
     % Show a figure with lines joining the accepted matches.
-    figure('Position', [0 0 size(im3,2)/2 size(im3,1)/2]); % Changed from figure('Position', [100 100 size(im3,2) size(im3,1)]);
+    %figure('Position', [0 0 size(im3,2)/2 size(im3,1)/2]); % Changed from figure('Position', [100 100 size(im3,2) size(im3,1)]);
     colormap('gray');
     imagesc(im3);
     hold on;

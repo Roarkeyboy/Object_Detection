@@ -3,12 +3,19 @@
 %   only if its distance is less than distRatio times the distance to the
 %   second closest match.
 
-function [match_loc1,match_loc2,matches,des1,loc1,loc2] = match(image1, image2,display)
+function [match_loc1,match_loc2,matches,des1,loc1,loc2] = new_match(image1, image2,display,new_data,current_scene)
 
-% Find SIFT keypoints for each image
-[im1, des1, loc1] = sift(image1);
-[im2, des2, loc2] = sift(image2);
-
+if(new_data)
+    % Find SIFT keypoints for each image
+    [im1, des1, loc1] = sift(image1);
+    [im2, des2, loc2] = sift(image2);
+else
+    scene_path = strcat('input_images/scenes/',current_scene,'.mat');
+    load(scene_path,'im1','des1','loc1');
+    object_path = strcat(image2(1:end-4),'.mat');
+    load(object_path,'im2','des2','loc2');
+    
+end
 % For efficiency in Matlab, it is cheaper to compute dot products between
 %  unit vectors rather than Euclidean distances.  Note that the ratio of 
 %  angles (acos of dot products of unit vectors) is a close approximation

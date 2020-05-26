@@ -38,10 +38,12 @@ for ii = 1:size(des1,1)
 end
 if (display)
     % Create a new image showing the two images side by side.
+    im1 = imread(image1);
+    im2 = imread(image2);
     im3 = appendimages(im1,im2);
 
     % Show a figure with lines joining the accepted matches.
-    figure('Position', [0 0 size(im3,2)/2 size(im3,1)/2]); % Changed from figure('Position', [100 100 size(im3,2) size(im3,1)]);
+    %figure('Position', [0 0 size(im3,2)/2 size(im3,1)/2]); % Changed from figure('Position', [100 100 size(im3,2) size(im3,1)]);
     colormap('gray');
     imagesc(im3);
     hold on;

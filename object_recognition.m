@@ -58,8 +58,9 @@ handles.output = hObject;
 colour_list = {[124,252,0],[255,0,0],[255,255,0],[139,0,0],[128,0,128],[0,0,0],[255,255,255],[0,255,0],[0,0,255],[0,255,255],[255,0,255],[192,192,192],[128,128,128],[128,128,0],[0,128,0],[0,128,128],[0,0,128],[128,0,0],[255,69,0],[255,215,0]};
 handles.colour_list = colour_list;
 % Created object list to index through
-object_list = {'battery','calculator','canned_beans','card_1','card_2','cd','deodorant','dice','drink_holder','forklift','minion','mints','opener','sauce_jar','shoe','snack_bar','strepsils','vitamins','wallet_1','wallet_2'};
+object_list = {'bandaids','battery','book','calculator','canned_beans','card_1','card_2','cd','deodorant','drink_holder','migoreng','minion','mints','pest_paper','shoe','snack_bar','strepsils','toothpaste','up_go','wallet_2'};
 handles.object_list = object_list;
+set(handles.axes1,'Visible','off'); % Start with left axis not visible
 % Update handles structure
 guidata(hObject, handles);
 
@@ -83,7 +84,7 @@ function pushbutton1_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-[file_name,file_path]= uigetfile('*'); % Get the jpg data from the users selection
+[file_name,file_path]= uigetfile('full_size_images/scenes/*.jpg'); % Get the jpg data from the users selection
 full_name = [file_path file_name]; 
 global current_scene
 current_scene = file_name(1:strfind(file_name,'.')-1);
@@ -95,7 +96,8 @@ if (size(image_file,3) == 3) % If image is RGB, convert to gray
     image_file = rgb2gray(image_file);
 end
 colormap(gray) % display grayscale
-imwrite(image_file,strcat('found_objects/',current_scene,'/',current_scene,'.pgm'),'pgm');
+%imwrite(image_file,strcat('found_objects/',current_scene,'/',current_scene,'.pgm'),'pgm');
+%imwrite(image_file,strcat('input_images/scenes/',current_scene,'.pgm'),'pgm');
 handles.image_file = image_file;
 handles.image_file_rgb = image_file_rgb;
 guidata(hObject,handles);
@@ -106,124 +108,24 @@ function pushbutton2_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global current_scene;
-scene_pgm = strcat('found_objects/',current_scene,'/',current_scene,'.pgm');
+scene_pgm = strcat('input_images/scenes/',current_scene,'.pgm');
+disp(current_scene);
+new_data = 0;
 max = 0;
-temp = 0;
 matches = 0;
 best = 0;
 best_homo = 0;
 best_match_loc1 = 0;
 best_match_loc2 = 0;
 dilated = 0;
-scene = imread(scene_pgm);
 new_db = cell(1,20);
 scale = cell(1,20);
 text_string = cell(1,20);
-firstFlag = 1;
+first_flag = 1;
 handles.text3.String = ('SEARCHING');
 set(handles.text3,'BackgroundColor','red');
-for ii = 1:20%:length(handles.object_list)    
-    scene = imread(scene_pgm);
-    type = char(handles.object_list(ii));
-    disp('--------------------------------------');
-    printer = ['Searching for ',type];
-    disp(printer);
-    d = strcat('input_images/objects/',type);
-    files = dir(fullfile(d,'*.pgm'));
-    %figure()
-    for jj = 1:numel(files)
-        file_name = fullfile(d,files(jj).name);
-        image_pgm = file_name;
-    %for jj = 1:6
-    %    image_pgm = strcat('input_images/objects/',type,'/image_',num2str(jj),'.pgm');
-        try
-            disp('---- GETTING MATCHES ----');
-            [match_loc1, match_loc2, match_results,des1,loc1,loc2] = new_match(scene_pgm,image_pgm,0);
-            disp('---- RANSAC MATCHES ----');
-            printer = ['Performing RANSAC on ',strcat(type,'/image_',num2str(jj),'.pgm')];
-            disp(printer);
-            [H, corrPtIdx] = findHomography(match_loc2',match_loc1');
-            [match_loc1,match_loc2,num] = ransac_match(scene_pgm,image_pgm,corrPtIdx,match_results,des1,loc1,loc2,0);
-            temp = num;
-            if temp > max 
-                if (temp > 9) % need at least 9 matches 
-                    max = temp;
-                    best = image_pgm;
-                    best_homo = H;
-                    best_match_loc1 = match_loc1;
-                    best_match_loc2 = match_loc2; 
-                end      
-            end
-        catch
-            disp('Image load error');
-        end
-    end
-    if (best == 0)
-        printer2 = ['No good match for ',type];
-        disp(printer2);
-    else 
-        matches = matches + 1;
-        new_db(matches) = {[best_match_loc1,best_match_loc2]};
-        
-        text_string{matches} = type;
-        handles.listbox1.String = text_string;
+full_run(current_scene,handles,hObject,scene_pgm,new_data,max,matches,best,best_homo,best_match_loc1,best_match_loc2,dilated,new_db,scale,text_string,first_flag);
 
- %%  UNCOMMENT THIS WHEN WORKING ON THE OUTLINE SECTION 
-
-        [tform, ~, ~] = estimateGeometricTransform(best_match_loc2, best_match_loc1, 'affine');
-        imgout = warp_it(best_homo,best,scene,tform); 
-        [rows, cols, ~] = size(imgout);
-        [rows2, cols2, ~] = size(scene);
-        if (rows*cols <= rows2*cols2)  
-            dilated = dilate_them(imgout,handles,dilated,matches);
-        else
-            disp('ERROR TRANSFORMING');
-        end
- %%
-    end 
-    if (matches == 1 && firstFlag)
-        image = imread(strcat('input_images/objects/',type,'/',best(end-4),'.jpg'));
-        scene = handles.image_file_rgb;
-        app = appendimages(scene,image);
-        outlined_app = appendimages(dilated,image);
-        app2 = image;
-        scale(1) = {[1,1]};
-        imwrite(app2,strcat('found_objects/',current_scene,'/append_',num2str(matches),'.pgm'),'pgm');
-        %imagesc(app); axis(handles.axes1, 'equal','tight','off')
-        imagesc(outlined_app); axis(handles.axes1, 'equal','tight','off')
-        firstFlag = 0;
-    elseif (matches > 1)
-        try
-            im_2 = imread(strcat('input_images/objects/',type,'/',best(end-4),'.jpg'));
-            scene = handles.image_file_rgb;
-            [app2,scale] = appendimages2(app2,im_2,scene,matches,scale); % appends images downwards
-            imwrite(app2,strcat('found_objects/',current_scene,'/append_',num2str(matches),'.pgm'),'pgm');
-            app = appendimages(scene,app2);
-            outlined_app = appendimages(dilated,app2);
-            %imagesc(app); axis(handles.axes1, 'equal','tight','off')
-            imagesc(outlined_app); axis(handles.axes1, 'equal','tight','off')
-        catch
-            continue
-        end
-    end   
-    if (matches > 0)
-       draw_new_lines(scene_pgm,outlined_app,app2,new_db,matches,scale,hObject,handles);
-    end
-    try
-        handles.not_outlined = app;
-        handles.outlined = outlined_app;
-        handles.scene_pgm = scene_pgm;
-        handles.app2 = app2;
-        handles.new_db = new_db;
-        handles.matches = matches;
-        handles.scale = scale;
-        guidata(hObject,handles);
-    catch
-        continue;
-    end    
-    best = 0;
-    max = 0;
-end
 set(handles.text3,'BackgroundColor','green');
 handles.text3.String = ('FINISHED SEARCHING');
 % --- Executes on button press in checkbox1.
