@@ -1,6 +1,11 @@
+% This is  the automation that is completely automated. It finds a match
+% with an object and the scene, appends it beside the scene and draws lines
+% to the matches. (Most of this is commented in GUI_testing so there is no
+% overlap)
+
 function matches = full_run(current_scene,handles,hObject,scene_pgm,new_data,max,matches,best,best_homo,best_match_loc1,best_match_loc2,dilated,new_db,scale,text_string,first_flag)
 
-for ii = 1:length(handles.object_list)  
+for ii = 1:length(handles.object_list)  % all objects
     guidata(hObject,handles);
     scene = imread(scene_pgm);
     type = char(handles.object_list(ii));
@@ -9,7 +14,7 @@ for ii = 1:length(handles.object_list)
     disp(printer);
     d = strcat('input_images/objects/',type);
     files = dir(fullfile(d,'*.pgm'));
-    for jj =1:numel(files)
+    for jj =1:numel(files) % all orientations
         file_name = fullfile(d,files(jj).name);
         image_pgm = file_name;
         try
@@ -42,7 +47,7 @@ for ii = 1:length(handles.object_list)
         new_db(matches) = {[best_match_loc1,best_match_loc2]};
         
         text_string{matches} = type;
-        handles.listbox1.String = text_string;
+        handles.listbox1.String = text_string; % append object to objects found
 
         [tform, ~, ~] = estimateGeometricTransform(best_match_loc2, best_match_loc1, 'affine');
         imgout = warp_it(best_homo,best,scene,tform); 
@@ -53,7 +58,6 @@ for ii = 1:length(handles.object_list)
         else
             disp('ERROR TRANSFORMING');
         end
- %%
     end 
     if (matches == 1 && first_flag)
         image = imread(strcat('input_images/objects/',type,'/',best(end-4),'.jpg'));
@@ -82,6 +86,7 @@ for ii = 1:length(handles.object_list)
        draw_new_lines(scene_pgm,outlined_app,app2,new_db,matches,scale,hObject,handles);
     end
     try
+        % update handles to be passed back recursively
         handles.not_outlined = app;
         handles.outlined = outlined_app;
         handles.scene_pgm = scene_pgm;

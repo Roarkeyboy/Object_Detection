@@ -1,3 +1,8 @@
+% This is the GUI to which can automatically display object matches on a
+% given scene. It appends the objects to the objects found box as well as
+% appending their images and drawing outlines and lines. It requires an
+% input scene and then the detection can begin.
+
 function varargout = object_recognition(varargin)
 % OBJECT_RECOGNITION MATLAB code for object_recognition.fig
 %      OBJECT_RECOGNITION, by itself, creates a new OBJECT_RECOGNITION or raises the existing
@@ -22,7 +27,7 @@ function varargout = object_recognition(varargin)
 
 % Edit the above text to modify the response to help object_recognition
 
-% Last Modified by GUIDE v2.5 26-May-2020 15:18:46
+% Last Modified by GUIDE v2.5 26-May-2020 18:41:16
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -60,7 +65,8 @@ handles.colour_list = colour_list;
 % Created object list to index through
 object_list = {'bandaids','battery','book','calculator','canned_beans','card_1','card_2','cd','deodorant','drink_holder','migoreng','minion','mints','pest_paper','shoe','snack_bar','strepsils','toothpaste','up_go','wallet_2'};
 handles.object_list = object_list;
-
+% For calculating accuracy, numbers in array are numbers of known objects
+% in scene
 objects_in_images_list = {4,4,4,4,4,6,6,6,6,8,4,5,3,3,3,3,3,3,3,3,8,3,3,5,3,4,5,7,5,12};
 handles.objects_in_images_list  = objects_in_images_list;
 set(handles.axes1,'Visible','off'); % Start with left axis not visible
@@ -99,16 +105,15 @@ if (size(image_file,3) == 3) % If image is RGB, convert to gray
     image_file = rgb2gray(image_file);
 end
 colormap(gray) % display grayscale
-%imwrite(image_file,strcat('found_objects/',current_scene,'/',current_scene,'.pgm'),'pgm');
-%imwrite(image_file,strcat('input_images/scenes/',current_scene,'.pgm'),'pgm');
 handles.image_file = image_file;
 handles.image_file_rgb = image_file_rgb;
-
+% get scene index number (etc. scene_2 is 2)
 index = strcat(file_name(1+strfind(file_name,'_'):strfind(file_name,'.')-1),'');
 index = str2double(index);
 handles.index_file = index;
-handles.text6.String = ('N/A');
+handles.text6.String = ('N/A'); % start with no accuracy
 guidata(hObject,handles);
+
 % --- Executes on button press in pushbutton2.
 function pushbutton2_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton2 (see GCBO)
@@ -119,6 +124,7 @@ scene_pgm = strcat('input_images/scenes/',current_scene,'.pgm');
 index_file = handles.index_file;
 objects_in_images_list = handles.objects_in_images_list;
 new_data = handles.new_data;
+% initialization 
 max = 0;
 matches = 0;
 best = 0;
@@ -130,19 +136,29 @@ new_db = cell(1,20);
 scale = cell(1,20);
 text_string = cell(1,20);
 first_flag = 1;
+% update Status Bar, Status Colour and Accuracy of matches
 handles.text3.String = ('SEARCHING');
 set(handles.text3,'BackgroundColor','red');
-drawnow();
+handles.text6.String = ('N/A');
+drawnow(); % update 
+% do not allow user input to draw lines or draw object outlines
+set(handles.checkbox1,'Enable','off')
+set(handles.checkbox2,'Enable','off')
+% main automation function to update gui with matches (lines, outlines and
+% total)
 total_matches = full_run(current_scene,handles,hObject,scene_pgm,new_data,max,matches,best,best_homo,best_match_loc1,best_match_loc2,dilated,new_db,scale,text_string,first_flag);
-
+% allow user input to draw lines or draw object outlines
+set(handles.checkbox1,'Enable','on')
+set(handles.checkbox2,'Enable','on')
+% update Status Bar, Status Colour and Accuracy of matches
 set(handles.text3,'BackgroundColor','green');
 handles.text3.String = ('FINISHED SEARCHING');
-accuracy = 100*(total_matches/objects_in_images_list{index_file});
+accuracy = 100*(total_matches/objects_in_images_list{index_file}); 
 handles.text6.String = strcat(num2str(accuracy),'%');
 
 % --- Executes on button press in checkbox1.
 function checkbox1_Callback(hObject, eventdata, handles)
-
+% get all the handles to pass to draw_new_lines function
 outlined_app = handles.outlined;
 not_outlined = handles.not_outlined;
 scene_pgm = handles.scene_pgm;
@@ -150,10 +166,11 @@ app2 = handles.app2;
 new_db = handles.new_db;
 matches = handles.matches;
 scale = handles.scale;
+% check other checkboxes values in order to display lines appropriately
 if((get(handles.checkbox1,'Value') == 1) && (get(handles.checkbox2,'Value') == 1))
-    draw_new_lines(scene_pgm,outlined_app,app2,new_db,matches,scale,hObject,handles);
+    draw_new_lines(scene_pgm,outlined_app,app2,new_db,matches,scale,hObject,handles); % with outline
 elseif((get(handles.checkbox1,'Value') == 1) && (get(handles.checkbox2,'Value') == 0))
-    draw_new_lines(scene_pgm,not_outlined,app2,new_db,matches,scale,hObject,handles);
+    draw_new_lines(scene_pgm,not_outlined,app2,new_db,matches,scale,hObject,handles); % without outline
 elseif(get(handles.checkbox1,'Value') == 0) && (get(handles.checkbox2,'Value') == 0)
     imagesc(handles.not_outlined); axis(handles.axes1, 'equal','tight','off')
 else
@@ -163,6 +180,7 @@ end
 
 % --- Executes on button press in checkbox2.
 function checkbox2_Callback(hObject, eventdata, handles)
+% get all the handles to pass to draw_new_lines function
 outlined_app = handles.outlined;
 not_outlined = handles.not_outlined;
 scene_pgm = handles.scene_pgm;
@@ -170,11 +188,11 @@ app2 = handles.app2;
 new_db = handles.new_db;
 matches = handles.matches;
 scale = handles.scale;
-
+% check other checkboxes values in order to display lines appropriately
 if(get(handles.checkbox1,'Value') == 0) && (get(handles.checkbox2,'Value') == 0)
-    imagesc(handles.not_outlined); axis(handles.axes1, 'equal','tight','off')
+    imagesc(not_outlined); axis(handles.axes1, 'equal','tight','off') % without outline 
 elseif(get(handles.checkbox1,'Value') == 0) && (get(handles.checkbox2,'Value') == 1)
-    imagesc(handles.outlined); axis(handles.axes1, 'equal','tight','off')
+    imagesc(outlined_app); axis(handles.axes1, 'equal','tight','off') % with outline
 elseif(get(handles.checkbox1,'Value') == 1) && (get(handles.checkbox2,'Value') == 1)
     draw_new_lines(scene_pgm,outlined_app,app2,new_db,matches,scale,hObject,handles);
 else
@@ -212,7 +230,6 @@ function listbox1_Callback(hObject, eventdata, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns listbox1 contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from listbox1
 
-
 % --- Executes during object creation, after setting all properties.
 function listbox1_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to listbox1 (see GCBO)
@@ -228,7 +245,7 @@ end
 
 % --- Executes on button press in checkbox3.
 function checkbox3_Callback(hObject, eventdata, handles)
-
+% check checkbox3 values to use trained model or not
 if(get(handles.checkbox3,'Value') == 1)
     handles.new_data = 0;
 elseif(get(handles.checkbox3,'Value') == 0)
@@ -241,5 +258,20 @@ function checkbox3_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to checkbox3 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
-handles.new_data = 0;
+handles.new_data = 0; % set new_data to 0, indicating that it wont be using the new data search
 guidata(hObject,handles);
+
+
+% --- Executes during object creation, after setting all properties.
+function checkbox1_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to checkbox1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+set(hObject,'Enable','off') % start disabled
+
+% --- Executes during object creation, after setting all properties.
+function checkbox2_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to checkbox2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+set(hObject,'Enable','off') % start disabled

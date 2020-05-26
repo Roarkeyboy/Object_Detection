@@ -1,7 +1,5 @@
 % This function reads two images, finds their SIFT features, and
-%   displays lines connecting the matched keypoints.  A match is accepted
-%   only if its distance is less than distRatio times the distance to the
-%   second closest match.
+%   displays lines connecting the matched keypoints. 
 
 function [match_loc1,match_loc2,matches,des1,loc1,loc2] = new_match(image1, image2,display,new_data,current_scene)
 
@@ -9,7 +7,7 @@ if(new_data)
     % Find SIFT keypoints for each image
     [im1, des1, loc1] = sift(image1);
     [im2, des2, loc2] = sift(image2);
-else
+else % if the data is known it is loaded into function
     scene_path = strcat('input_images/scenes/',current_scene,'.mat');
     load(scene_path,'im1','des1','loc1');
     object_path = strcat(image2(1:end-4),'.mat');
@@ -39,7 +37,7 @@ for i = 1 : size(des1,1)
    end
 end
 
-if (display)
+if (display) % if display == 1 then display matches
     % Create a new image showing the two images side by side.
     im3 = appendimages(im1,im2);
 
@@ -60,14 +58,14 @@ end
 num = sum(match > 0);
 fprintf('Found %d matches.\n', num);
 
-idx1 = find(match);
-idx2 = match(idx1);
-x1 = loc1(idx1,2);
-x2 = loc2(idx2,2);
-y1 = loc1(idx1,1);
-y2 = loc2(idx2,1);
-match_loc1 = [x1,y1];
-match_loc2 = [x2,y2];
-matches = match;
+idx1 = find(match); % returns indices of match
+idx2 = match(idx1); % returns indices of matches at idx1
+x1 = loc1(idx1,2); % x1 location
+x2 = loc2(idx2,2); % x2 location 
+y1 = loc1(idx1,1); % y1 location
+y2 = loc2(idx2,1); % y2 location
+match_loc1 = [x1,y1]; % coorindates of match 1
+match_loc2 = [x2,y2]; % coordinates of match 2
+matches = match; % return the matches (locs and des)
 
 

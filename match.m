@@ -1,4 +1,4 @@
-% num = match(image1, image2)
+% num = match(image1, image2,1)
 %
 % This function reads two images, finds their SIFT features, and
 %   displays lines connecting the matched keypoints.  A match is accepted
@@ -6,7 +6,7 @@
 %   second closest match.
 % It returns the number of matches displayed.
 %
-% Example: match('scene.pgm','book.pgm');
+% Example: match('scene.pgm','book.pgm',1);
 
 function num = match(image1, image2, display)
 
@@ -37,7 +37,7 @@ for i = 1 : size(des1,1)
    end
 end
 
-if (display)
+if (display) % if display is passed as a parameter it displays the matches
     % Create a new image showing the two images side by side.
     im3 = appendimages(im1,im2);
 

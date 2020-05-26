@@ -22,7 +22,7 @@ function varargout = object_recognition(varargin)
 
 % Edit the above text to modify the response to help object_recognition
 
-% Last Modified by GUIDE v2.5 25-May-2020 11:47:48
+% Last Modified by GUIDE v2.5 26-May-2020 15:18:46
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -60,8 +60,9 @@ handles.colour_list = colour_list;
 % Created object list to index through
 object_list = {'bandaids','battery','book','calculator','canned_beans','card_1','card_2','cd','deodorant','drink_holder','migoreng','minion','mints','pest_paper','shoe','snack_bar','strepsils','toothpaste','up_go','wallet_2'};
 handles.object_list = object_list;
-
-objects_in_images_list = {4,4,4,4,4,6,6,6,6,8};
+% For calculating accuracy, numbers in array are numbers of known objects
+% in scene
+objects_in_images_list = {4,4,4,4,4,6,6,6,6,8,4,5,3,3,3,3,3,3,3,3,8,3,3,5,3,4,5,7,5,12};
 handles.objects_in_images_list  = objects_in_images_list;
 set(handles.axes1,'Visible','off'); % Start with left axis not visible
 % Update handles structure
@@ -99,15 +100,13 @@ if (size(image_file,3) == 3) % If image is RGB, convert to gray
     image_file = rgb2gray(image_file);
 end
 colormap(gray) % display grayscale
-%imwrite(image_file,strcat('found_objects/',current_scene,'/',current_scene,'.pgm'),'pgm');
-%imwrite(image_file,strcat('input_images/scenes/',current_scene,'.pgm'),'pgm');
 handles.image_file = image_file;
 handles.image_file_rgb = image_file_rgb;
-
-index = file_name(1+strfind(file_name,'_'):strfind(file_name,'.')-1);
-
-handles.index_file = str2num(index);
-handles.text6.String = ('N/A');
+% get scene index number (scene_2 is 2)
+index = strcat(file_name(1+strfind(file_name,'_'):strfind(file_name,'.')-1),'');
+index = str2double(index);
+handles.index_file = index;
+handles.text6.String = ('N/A'); % start with no accuracy
 guidata(hObject,handles);
 % --- Executes on button press in pushbutton2.
 function pushbutton2_Callback(hObject, eventdata, handles)
@@ -117,7 +116,8 @@ function pushbutton2_Callback(hObject, eventdata, handles)
 global current_scene;
 scene_pgm = strcat('input_images/scenes/',current_scene,'.pgm');
 index_file = handles.index_file;
-new_data = 0;
+objects_in_images_list = handles.objects_in_images_list;
+new_data = handles.new_data;
 max = 0;
 matches = 0;
 best = 0;
@@ -131,14 +131,14 @@ text_string = cell(1,20);
 first_flag = 1;
 handles.text3.String = ('SEARCHING');
 set(handles.text3,'BackgroundColor','red');
+handles.text6.String = ('N/A');
+drawnow();
 total_matches = full_run(current_scene,handles,hObject,scene_pgm,new_data,max,matches,best,best_homo,best_match_loc1,best_match_loc2,dilated,new_db,scale,text_string,first_flag);
 
 set(handles.text3,'BackgroundColor','green');
 handles.text3.String = ('FINISHED SEARCHING');
-accuracy = total_matches/handles.objects_in_images_list{index_file}(:);
-disp(total_matches);
-disp(
-handles.text6.String = strcat(num2str(accuracy,'%'));
+accuracy = 100*(total_matches/objects_in_images_list{index_file});
+handles.text6.String = strcat(num2str(accuracy),'%');
 
 % --- Executes on button press in checkbox1.
 function checkbox1_Callback(hObject, eventdata, handles)
@@ -224,3 +224,23 @@ function listbox1_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in checkbox3.
+function checkbox3_Callback(hObject, eventdata, handles)
+
+if(get(handles.checkbox3,'Value') == 1)
+    handles.new_data = 0;
+elseif(get(handles.checkbox3,'Value') == 0)
+    handles.new_data = 1;
+end
+guidata(hObject,handles);
+
+% --- Executes during object creation, after setting all properties.
+function checkbox3_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to checkbox3 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+set(handles.checkbox2,'Enable','off')
+handles.new_data = 0;
+guidata(hObject,handles);

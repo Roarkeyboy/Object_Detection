@@ -1,3 +1,4 @@
+% Solve the homography matrix at given points
 function H = solveHomo(pts1,pts2)
 %	H is 3*3, H*[pts1(:,i);1] ~ [pts2(:,i);1], H(3,3) = 1
 %	the solving method see "projective-Seitz-UWCSE.ppt"
