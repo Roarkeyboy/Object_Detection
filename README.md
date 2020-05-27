@@ -43,35 +43,35 @@ accuracy for the object detector analyzing that scene.
 
 (folders)
 Object_Detection
-- full_size_images
--- objects (all objects are in individually named folders with jpg images inside the folders) 
---- bandaids
---- etc....
--- scenes (all 30 scenes as jpgs in this folder labelled scene_1, - > ,scene_30)
-- input_images
--- objects (all objects are in individually named folders with jpg, pgm and mat data inside their folders) 
--- scenes (all 30 scenes as pgm and mat data in this folder labelled scene_1, - > ,scene_30)
+* full_size_images
+ * objects (all objects are in individually named folders with jpg images inside the folders) 
+  * bandaids
+  * etc....
+ * scenes (all 30 scenes as jpgs in this folder labelled scene_1, - > ,scene_30)
+* input_images
+ * objects (all objects are in individually named folders with jpg, pgm and mat data inside their folders) 
+ * scenes (all 30 scenes as pgm and mat data in this folder labelled scene_1, - > ,scene_30)
 
 (relevant matlab code files)
-appendimages
-appendimages2
-dilate_them
-draw_new_lines
-findHomography
-full_run
-GUI_testing
-GUI_testing (figure)
-match
-new_match
-object_recognition
-object_recognition (figure)
-randIndex
-ransac_match
-ransac1
-showkeys
-sift
-solveHomo
-warp_it
+1. appendimages
+2. appendimages2
+3. dilate_them
+4. draw_new_lines
+5. findHomography
+6. full_run
+7. GUI_testing
+8. GUI_testing (figure)
+9. match
+10. new_match
+11. object_recognition
+12. object_recognition (figure)
+13. randIndex
+14. ransac_match
+15. ransac1
+16. showkeys
+17.sift
+18. solveHomo
+19. warp_it
 
 # Procedure to Run Code
 
