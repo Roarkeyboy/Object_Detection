@@ -16,31 +16,18 @@ for kk = 1:matches
     best_match_loc2 = new_db{kk}(:,3:4); % object matches
     scale_value_x = scale{kk}(:,1); % x scale
     scale_value_y = scale{kk}(:,2); % y scale
-    if (kk > 1)
-        disp(scale_value_x)
-        disp(scale_value_y)
-        if (scale_value_x < scale{1}(:,1))   
-            best_match_loc2(:,1) = best_match_loc2(:,1).*scale_value_x;
-        else
-            best_match_loc2(:,1) = best_match_loc2(:,1)./scale_value_x;
-        end
-        if (scale_value_y < scale{1}(:,2)) 
-            best_match_loc2(:,2) = best_match_loc2(:,2).*scale_value_y;
-        else
-            best_match_loc2(:,2) = best_match_loc2(:,2)./scale_value_y;
-        end
-    end   
-    if (((matches == 1) ||(matches == 2)) && ((kk == 2) || (kk == 1)))
-        best_match_loc2 = best_match_loc2;
-        %best_match_loc2(:,2) = best_match_loc2(:,2)/(matches);
+    if (kk == 1)
+        best_match_loc2(:,2) = best_match_loc2(:,2)*scale_value_x;
     else
-        %best_match_loc2 = best_match_loc2/(matches);
-        best_match_loc2(:,2) = best_match_loc2(:,2)/(matches-1.5);
-       % best_match_loc2(2,:) = best_match_loc2(2,:);   
+        best_match_loc2(:,2) = best_match_loc2(:,2)*scale_value_x;
+        best_match_loc2(:,1) = best_match_loc2(:,1)*scale_value_y;
+    end 
+    if(matches > 2)   
+        best_match_loc2(:,2) = best_match_loc2(:,2) * (kk/matches);
     end
     if (matches == 1)
         rows1 = 0;
-    elseif(matches > 2) && (kk == 1)
+    elseif(matches >= 2) && (kk == 1)
         rows1 = 0 ;     
     else
         rows1 = ((kk-1)*rows2) / matches;
