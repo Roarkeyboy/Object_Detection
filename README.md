@@ -44,13 +44,13 @@ accuracy for the object detector analyzing that scene.
 (folders)
 Object_Detection
 * full_size_images
- * objects (all objects are in individually named folders with jpg images inside the folders) 
-  * bandaids
-  * etc....
- * scenes (all 30 scenes as jpgs in this folder labelled scene_1, - > ,scene_30)
+  * objects (all objects are in individually named folders with jpg images inside the folders) 
+    * bandaids
+    * etc....
+  * scenes (all 30 scenes as jpgs in this folder labelled scene_1, - > ,scene_30)
 * input_images
- * objects (all objects are in individually named folders with jpg, pgm and mat data inside their folders) 
- * scenes (all 30 scenes as pgm and mat data in this folder labelled scene_1, - > ,scene_30)
+  * objects (all objects are in individually named folders with jpg, pgm and mat data inside their folders) 
+  * scenes (all 30 scenes as pgm and mat data in this folder labelled scene_1, - > ,scene_30)
 
 (relevant matlab code files)
 1. appendimages
