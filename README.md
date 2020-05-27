@@ -39,7 +39,7 @@ objects are detected automatically with their matches being drawn onto the scene
 accuracy for the object detector analyzing that scene. 
 
 
-# Details of Folders ( '-' indicates folder depth)
+# Details of Folders
 
 (folders)
 Object_Detection
