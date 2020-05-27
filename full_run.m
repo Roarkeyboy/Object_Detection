@@ -44,7 +44,7 @@ for ii = 1:length(handles.object_list)  % all objects
         disp(printer2);
     else 
         matches = matches + 1;
-        new_db(matches) = {[best_match_loc1,best_match_loc2]};
+        new_db(matches) = {[best_match_loc1,best_match_loc2]}; % add match locations to database
         
         text_string{matches} = type;
         handles.listbox1.String = text_string; % append object to objects found
