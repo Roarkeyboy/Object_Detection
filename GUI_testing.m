@@ -60,7 +60,7 @@ function GUI_testing_OpeningFcn(hObject, eventdata, handles, varargin)
 
 % Choose default command line output for GUI_testing
 handles.output = hObject;
-% Created colour list for dynamic colouring for objects
+% Created [RGB] colour list for dynamic colouring for objects
 colour_list = {[124,252,0],[255,0,0],[255,255,0],[139,0,0],[128,0,128],[0,0,0],[255,255,255],[0,255,0],[0,0,255],[0,255,255],[255,0,255],[192,192,192],[128,128,128],[128,128,0],[0,128,0],[0,128,128],[0,0,128],[128,0,0],[255,69,0],[255,215,0]};
 handles.colour_list = colour_list;
 % Created object list to index through
@@ -110,7 +110,7 @@ varargout{1} = handles.output;
 % --- Executes on button press in pushbutton6.
 function pushbutton6_Callback(hObject, eventdata, handles)
 global current_scene
-scene_pgm = strcat('found_objects/',current_scene,'/scene_10.pgm');
+scene_pgm = strcat('input_images/scenes/',current_scene,'.pgm');
 image_pgm = ('input_images/objects/card_1/image_3.pgm');
 match(scene_pgm, image_pgm,1); % Pass 1 as third parameter to display match
 axis(handles.axes1, 'equal','tight','off')
@@ -121,7 +121,7 @@ axis(handles.axes1, 'equal','tight','off')
 % --- Executes on button press in pushbutton7.
 function pushbutton7_Callback(hObject, eventdata, handles)
 global current_scene
-scene_pgm = strcat('found_objects/',current_scene,'/',current_scene,'.pgm');
+scene_pgm = strcat('input_images/scenes/',current_scene,'.pgm');
 for ii = 6 %1:length(handles.object_list)    % Using 6 as it equates to card_1 in object list
     type = char(handles.object_list(ii)); % Access object_list with an index point to retrieve object name
     d = strcat('input_images/objects/',type,'/');
@@ -228,7 +228,7 @@ function pushbutton12_Callback(hObject, eventdata, handles)
 global current_scene
 max = 0;
 best = 0;
-scene_pgm = strcat('found_objects/',current_scene,'/',current_scene,'.pgm');
+scene_pgm = strcat('input_images/scenes/',current_scene,'.pgm');
 for jj = 6 % Object list index - 6 is card_1
     type = char(handles.object_list(jj));
     d = strcat('input_images/objects/',type);
@@ -312,7 +312,6 @@ for ii = 6 % card_1 index
         app = appendimages(scene,image); % append image to scene
         app2 = image;
         scale(1) = {[1,1]}; % initial scale 
-        imwrite(app2,strcat('found_objects/',current_scene,'/append_',num2str(matches),'.pgm'),'pgm');
         imagesc(app); axis(handles.axes1, 'equal','tight','off')
         firstFlag = 0;
     elseif (matches > 1)
@@ -320,7 +319,6 @@ for ii = 6 % card_1 index
             im_2 = imread(strcat('input_images/objects/',type,'/',best(end-4),'.jpg'));
             scene = handles.image_file_rgb;
             [app2,scale] = appendimages2(app2,im_2,scene,matches,scale); % appends images downwards
-            imwrite(app2,strcat('found_objects/',current_scene,'/append_',num2str(matches),'.pgm'),'pgm');
             app = appendimages(scene,app2); % append matched objects with scene 
             imagesc(app); axis(handles.axes1, 'equal','tight','off')
         catch
@@ -373,7 +371,7 @@ for ii = 6 % card_1
     disp('--------------------------------------');
     printer = ['Searching for ',type];
     disp(printer);
-    for jj = 1:6 % all orientations
+    for jj = 1:7 % all orientations for card
         image_pgm = strcat('input_images/objects/',type,'/image_',num2str(jj),'.pgm');
         try
             disp('---- GETTING MATCHES ----');
@@ -409,6 +407,7 @@ for ii = 6 % card_1
         [rows2, cols2, ~] = size(scene);
         if (rows*cols <= rows2*cols2)  % catch size errors
             dilated = dilate_them(imgout,handles,dilated,matches); % draws the outlines of an object onto the scene as pixel colours
+            imagesc(dilated);axis(handles.axes1, 'equal','tight','off')
         else
             disp('ERROR TRANSFORMING');
         end

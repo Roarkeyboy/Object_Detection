@@ -66,7 +66,6 @@ for ii = 1:length(handles.object_list)  % all objects
         outlined_app = appendimages(dilated,image);
         app2 = image;
         scale(1) = {[1,1]};
-        imwrite(app2,strcat('found_objects/',current_scene,'/append_',num2str(matches),'.pgm'),'pgm');
         imagesc(outlined_app); axis(handles.axes1, 'equal','tight','off')
         first_flag = 0;
     elseif (matches > 1)
@@ -74,7 +73,6 @@ for ii = 1:length(handles.object_list)  % all objects
             im_2 = imread(strcat('input_images/objects/',type,'/',best(end-4),'.jpg'));
             scene = handles.image_file_rgb;
             [app2,scale] = appendimages2(app2,im_2,scene,matches,scale); % appends images downwards
-            imwrite(app2,strcat('found_objects/',current_scene,'/append_',num2str(matches),'.pgm'),'pgm');
             app = appendimages(scene,app2);
             outlined_app = appendimages(dilated,app2);
             imagesc(outlined_app); axis(handles.axes1, 'equal','tight','off')

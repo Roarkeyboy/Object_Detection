@@ -1,5 +1,5 @@
 % This is the GUI to which can automatically display object matches on a
-% given scene. It appends the objects to the objects found box as well as
+% given scene. It appends the objects to the objects found listbox as well as
 % appending their images and drawing outlines and lines. It requires an
 % input scene and then the detection can begin.
 
@@ -59,7 +59,7 @@ function object_recognition_OpeningFcn(hObject, eventdata, handles, varargin)
 
 % Choose default command line output for object_recognition
 handles.output = hObject;
-% Created colour list for dynamic colouring for objects
+% Created [RGB] colour list for dynamic colouring for objects
 colour_list = {[124,252,0],[255,0,0],[255,255,0],[139,0,0],[128,0,128],[0,0,0],[255,255,255],[0,255,0],[0,0,255],[0,255,255],[255,0,255],[192,192,192],[128,128,128],[128,128,0],[0,128,0],[0,128,128],[0,0,128],[128,0,0],[255,69,0],[255,215,0]};
 handles.colour_list = colour_list;
 % Created object list to index through
@@ -144,12 +144,15 @@ drawnow(); % update
 % do not allow user input to draw lines or draw object outlines
 set(handles.checkbox1,'Enable','off')
 set(handles.checkbox2,'Enable','off')
+set(handles.checkbox3,'Enable','off')
+drawnow();
 % main automation function to update gui with matches (lines, outlines and
 % total)
 total_matches = full_run(current_scene,handles,hObject,scene_pgm,new_data,max,matches,best,best_homo,best_match_loc1,best_match_loc2,dilated,new_db,scale,text_string,first_flag);
 % allow user input to draw lines or draw object outlines
 set(handles.checkbox1,'Enable','on')
 set(handles.checkbox2,'Enable','on')
+set(handles.checkbox3,'Enable','on')
 % update Status Bar, Status Colour and Accuracy of matches
 set(handles.text3,'BackgroundColor','green');
 handles.text3.String = ('FINISHED SEARCHING');
