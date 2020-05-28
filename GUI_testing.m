@@ -1,3 +1,9 @@
+% UWA CITS4402 Computer Vision
+% Group 19
+% Roarke Holland 21742366
+% Jayden Kur 21988713
+% Andrew Ha 22246801 
+
 %% GUI Testing code for the various GUI buttons
 % This gui is for the testing and demonstration of the functions that the
 % system will perform on given data. It converts input images to pgm files,
@@ -61,7 +67,7 @@ function GUI_testing_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for GUI_testing
 handles.output = hObject;
 % Created [RGB] colour list for dynamic colouring for objects
-colour_list = {[124,252,0],[255,0,0],[255,255,0],[139,0,0],[128,0,128],[0,0,0],[255,255,255],[0,255,0],[0,0,255],[0,255,255],[255,0,255],[192,192,192],[128,128,128],[128,128,0],[0,128,0],[0,128,128],[0,0,128],[128,0,0],[255,69,0],[255,215,0]};
+colour_list = {[124,252,0],[255,0,0],[255,255,0],[139,0,0],[128,0,128],[128,128,0],[0,128,0],[0,128,128],[0,0,0],[255,255,255],[0,255,0],[0,0,255],[0,255,255],[255,0,255],[192,192,192],[128,128,128],[0,0,128],[128,0,0],[255,69,0],[255,215,0]};
 handles.colour_list = colour_list;
 % Created object list to index through
 object_list = {'bandaids','battery','book','calculator','canned_beans','card_1','card_2','cd','deodorant','drink_holder','migoreng','minion','mints','pest_paper','shoe','snack_bar','strepsils','toothpaste','up_go','wallet_2'};

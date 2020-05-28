@@ -1,3 +1,10 @@
+% UWA CITS4402 Computer Vision
+% Group 19
+% Roarke Holland 21742366
+% Jayden Kur 21988713
+% Andrew Ha 22246801 
+
+%% Presentation GUI
 % This is the GUI to which can automatically display object matches on a
 % given scene. It appends the objects to the objects found listbox as well as
 % appending their images and drawing outlines and lines. It requires an
@@ -60,7 +67,7 @@ function object_recognition_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for object_recognition
 handles.output = hObject;
 % Created [RGB] colour list for dynamic colouring for objects
-colour_list = {[124,252,0],[255,0,0],[255,255,0],[139,0,0],[128,0,128],[0,0,0],[255,255,255],[0,255,0],[0,0,255],[0,255,255],[255,0,255],[192,192,192],[128,128,128],[128,128,0],[0,128,0],[0,128,128],[0,0,128],[128,0,0],[255,69,0],[255,215,0]};
+colour_list = {[124,252,0],[255,0,0],[255,255,0],[139,0,0],[128,0,128],[128,128,0],[0,128,0],[0,128,128],[0,0,0],[255,255,255],[0,255,0],[0,0,255],[0,255,255],[255,0,255],[192,192,192],[128,128,128],[0,0,128],[128,0,0],[255,69,0],[255,215,0]};
 handles.colour_list = colour_list;
 % Created object list to index through
 object_list = {'bandaids','battery','book','calculator','canned_beans','card_1','card_2','cd','deodorant','drink_holder','migoreng','minion','mints','pest_paper','shoe','snack_bar','strepsils','toothpaste','up_go','wallet_2'};
@@ -112,6 +119,7 @@ index = strcat(file_name(1+strfind(file_name,'_'):strfind(file_name,'.')-1),'');
 index = str2double(index);
 handles.index_file = index;
 handles.text6.String = ('N/A'); % start with no accuracy
+drawnow()
 guidata(hObject,handles);
 
 % --- Executes on button press in pushbutton2.

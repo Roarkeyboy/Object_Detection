@@ -22,12 +22,12 @@ for kk = 1:matches % iterate all matches
         best_match_loc2(:,1) = best_match_loc2(:,1)*scale_value_x;
     end 
     if (matches > 2) % scales match locations (for objects) upwards as they are appended to image 
-        best_match_loc2(:,2) = best_match_loc2(:,2) * (kk/matches);
+        best_match_loc2(:,2) = best_match_loc2(:,2) * (kk/matches); 
     end
     if (matches == 1) % if one match, row offset is 0
         rows1 = 0;
     elseif(matches >= 2) && (kk == 1) % after matches increase, dont increase rows offset for first match
-        rows1 = 0 ;     
+        rows1 = 0 ;    
     else
         rows1 = ((kk-1)*rows2) / matches; % This sets the offset location for each new match that is added to the image
     end 
