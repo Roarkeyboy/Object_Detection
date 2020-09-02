@@ -38,6 +38,12 @@ object.
 After this was all completed the next GUI was created and the other functions were used together to make an automated process where a scene is loaded in and
 objects are detected automatically with their matches being drawn onto the scene and their names being appended to a list box on the GUI. As well as an
 accuracy for the object detector analyzing that scene. 
+### Example of UI and detection:
+### ![](obj_det_wo_outlines.png)
+### ![](obj_det_w_outlines.png)
+### Example of occlusion:
+### ![](obj_det_wo_outlines_2.png)
+### ![](obj_det_w_outlines_2.png)
 
 
 # Details of Folders
