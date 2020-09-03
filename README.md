@@ -41,6 +41,7 @@ accuracy for the object detector analyzing that scene.
 ### Example of UI and detection:
 ### ![](obj_det_wo_outlines.png)
 ### ![](obj_det_w_outlines.png)
+### ![](lines.png)
 ### Example of occlusion:
 ### ![](obj_det_wo_outlines_2.png)
 ### ![](obj_det_w_outlines_2.png)
